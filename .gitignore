@@ -12,3 +12,4 @@ share
 ui/node_modules/
 .env
 pyvenv.cfg
+*.log
