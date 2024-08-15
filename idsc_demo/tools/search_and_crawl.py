@@ -45,7 +45,7 @@ def read_webpage(url, driver):
 # Tool that searches a query on Google and extracts content in the top 3 sites. 
 def search_and_crawl(
     query: Annotated[str, 'query to search for'],
-    n=1,
+    n=2,
     blacklist=['google','youtu'], 
     ):
     driver = webdriver.Firefox()
