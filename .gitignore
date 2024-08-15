@@ -1,0 +1,14 @@
+__pycache__
+cache/
+venv/
+bin/
+etc
+DS_store/
+lib
+lib64
+include
+node_modules
+share
+ui/node_modules/
+.env
+pyvenv.cfg

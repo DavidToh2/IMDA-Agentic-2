@@ -1,0 +1,173 @@
+[33mWARNING[0m:  [14-08-2024 16:03:40] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048575. chroma_server_nofile will not be set.
+[32mINFO[0m:     [14-08-2024 16:03:40] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component System
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component SqliteDB
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component QuotaEnforcer
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component Posthog
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [14-08-2024 16:03:40] Starting component SegmentAPI
+[32mINFO[0m:     [14-08-2024 16:03:40] Started server process [[36m11870[0m]
+[32mINFO[0m:     [14-08-2024 16:03:40] Waiting for application startup.
+[32mINFO[0m:     [14-08-2024 16:03:40] Application startup complete.
+[32mINFO[0m:     [14-08-2024 16:03:40] Uvicorn running on [1mhttp://localhost:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     [14-08-2024 16:06:42] 127.0.0.1:57059 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:06:42] 127.0.0.1:57059 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:00] 127.0.0.1:57066 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:00] 127.0.0.1:57066 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:09] 127.0.0.1:57068 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:09] 127.0.0.1:57068 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[31mERROR[0m:    [14-08-2024 16:08:09] Collection my_collection does not exist.
+Traceback (most recent call last):
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/streams/memory.py", line 105, in receive
+    return self.receive_nowait()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/streams/memory.py", line 100, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/streams/memory.py", line 118, in receive
+    return receiver.item
+           ^^^^^^^^^^^^^
+AttributeError: 'MemoryObjectItemReceiver' object has no attribute 'item'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 159, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/streams/memory.py", line 120, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/server/fastapi/__init__.py", line 76, in catch_exceptions_middleware
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 165, in call_next
+    raise app_exc
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 151, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 189, in __call__
+    with collapse_excgroups():
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    raise exc
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/server/fastapi/__init__.py", line 90, in check_http_version_middleware
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 165, in call_next
+    raise app_exc
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/base.py", line 151, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/routing.py", line 297, in handle
+    await self.app(scope, receive, send)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/routing.py", line 77, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/starlette/routing.py", line 72, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/fastapi/routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/telemetry/opentelemetry/__init__.py", line 133, in async_wrapper
+    return await f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/server/fastapi/__init__.py", line 637, in get_collection
+    await to_thread.run_sync(
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2177, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 859, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/telemetry/opentelemetry/__init__.py", line 146, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyang/Desktop/Agent/lib/python3.12/site-packages/chromadb/api/segment.py", line 251, in get_collection
+    raise ValueError(f"Collection {name} does not exist.")
+ValueError: Collection my_collection does not exist.
+[32mINFO[0m:     [14-08-2024 16:08:09] 127.0.0.1:57069 - "GET /api/v1/collections/my_collection?tenant=default_tenant&database=default_database HTTP/1.1" 500
+[32mINFO[0m:     [14-08-2024 16:08:21] 127.0.0.1:57072 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:21] 127.0.0.1:57072 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:08:21] 127.0.0.1:57073 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [14-08-2024 16:08:54] Starting component PersistentLocalHnswSegment
+[32mINFO[0m:     [14-08-2024 16:08:54] 127.0.0.1:57077 - "POST /api/v1/collections/a976e809-b38c-4376-a53e-aaaf2c7fc959/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:12:52] Shutting down
+[32mINFO[0m:     [14-08-2024 16:12:52] Waiting for application shutdown.
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component System
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component SegmentAPI
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component PersistentLocalHnswSegment
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component Posthog
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component QuotaEnforcer
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component SqliteDB
+[36mDEBUG[0m:    [14-08-2024 16:12:52] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [14-08-2024 16:12:52] Application shutdown complete.
+[32mINFO[0m:     [14-08-2024 16:12:52] Finished server process [[36m11870[0m]
+[33mWARNING[0m:  [14-08-2024 16:13:35] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048575. chroma_server_nofile will not be set.
+[32mINFO[0m:     [14-08-2024 16:13:35] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component System
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component SqliteDB
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component QuotaEnforcer
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component Posthog
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [14-08-2024 16:13:35] Starting component SegmentAPI
+[32mINFO[0m:     [14-08-2024 16:13:35] Started server process [[36m12155[0m]
+[32mINFO[0m:     [14-08-2024 16:13:35] Waiting for application startup.
+[32mINFO[0m:     [14-08-2024 16:13:35] Application startup complete.
+[32mINFO[0m:     [14-08-2024 16:13:35] Uvicorn running on [1mhttp://localhost:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     [14-08-2024 16:13:52] 127.0.0.1:57097 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:13:52] 127.0.0.1:57097 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:13:52] 127.0.0.1:57098 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [14-08-2024 16:13:55] Starting component PersistentLocalHnswSegment
+[32mINFO[0m:     [14-08-2024 16:13:55] 127.0.0.1:57098 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:14:12] 127.0.0.1:57102 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:19:48] 127.0.0.1:57161 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:19:48] 127.0.0.1:57161 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:19:48] 127.0.0.1:57162 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:19:48] 127.0.0.1:57162 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:56:31] 127.0.0.1:57363 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:56:31] 127.0.0.1:57363 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:56:31] 127.0.0.1:57364 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 16:56:31] 127.0.0.1:57364 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:42:24] 127.0.0.1:59371 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:42:24] 127.0.0.1:59371 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:42:24] 127.0.0.1:59372 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:42:25] 127.0.0.1:59372 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:44:21] 127.0.0.1:59398 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:46:28] 127.0.0.1:59438 - "GET /api/v1/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:46:28] 127.0.0.1:59438 - "GET /api/v1/databases/default_database?tenant=default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:46:28] 127.0.0.1:59439 - "GET /api/v1/collections/internal_info?tenant=default_tenant&database=default_database HTTP/1.1" 200
+[32mINFO[0m:     [14-08-2024 17:46:40] 127.0.0.1:59442 - "POST /api/v1/collections/6f0c7b6c-e035-4eab-a93e-780470a14e85/query HTTP/1.1" 200
