@@ -3,6 +3,8 @@ from chroma.FileReader import FileReader
 from langchain_chroma import Chroma
 import os
 
+from typing_extensions import Annotated
+
 class ChromaDatabase(ChromaClient):
     def __init__(self):
         super().__init__()
@@ -16,7 +18,7 @@ class ChromaDatabase(ChromaClient):
             doc_chunks = self.split_docs(docs)
             self.vectorstore : Chroma = Chroma.from_documents(documents=doc_chunks, embedding=self.model, persist_directory=DB_DIR)
 
-    def similarity_search(self, qn, k):
+    def internal_search(self, qn, k):
         print("---- Starting similarity search on Chroma database ----\n")
         res = self.vectorstore.similarity_search(query=qn, k=k)
         print("---- Similarity search finished on Chroma database ----\n")
@@ -24,4 +26,7 @@ class ChromaDatabase(ChromaClient):
     
     def insert(self, document):
         pass
-        
+
+def internal_search(qn: Annotated[str, "Query to search for"], k=3):
+    chroma_db = ChromaDatabase()
+    return chroma_db.internal_search(qn, k)
