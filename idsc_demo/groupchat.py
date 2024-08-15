@@ -116,7 +116,7 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
         return ordering[len(messages)-1]
 
 
-    elif last_speaker is planner:
+    elif last_speaker is orchestrator:
         # if the last message is from planner, let the crawler search
         return external_searcher
     
@@ -125,7 +125,7 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
             # If the last message is the result of a tool call from user and is not empty, let the writer continue
             return writer
         else: 
-            return planner     
+            return orchestrator     
 
     elif last_speaker is external_searcher:
         return user_proxy
