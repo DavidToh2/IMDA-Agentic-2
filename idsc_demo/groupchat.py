@@ -140,7 +140,7 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
 
 
 groupchat = GroupChat(
-    agents=[user_proxy, writer, external_searcher, planner,extractor, internal_searcher],
+    agents=[user_proxy, writer, external_searcher, orchestrator, supervisor, internal_searcher],
     messages=[],
     max_round=10,
     speaker_selection_method=custom_speaker_selection_func,
