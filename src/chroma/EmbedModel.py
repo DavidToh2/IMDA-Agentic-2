@@ -1,12 +1,13 @@
 
 from sentence_transformers import SentenceTransformer
+from chromadb.utils import embedding_functions
 from typing import List
 
 class EmbedModel():
     def __init__(self):
         # Embeddings
-        EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-        self.model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
+        EMBEDDING_MODEL = embedding_functions.DefaultEmbeddingFunction()
+        self.model = EMBEDDING_MODEL
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self.model.encode(t).tolist() for t in texts]

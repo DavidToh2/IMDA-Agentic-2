@@ -1,6 +1,7 @@
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from chroma.EmbedModel import EmbedModel
+from chromadb.utils import embedding_functions
 from typing import List
 
 class ChromaClient():
@@ -11,7 +12,7 @@ class ChromaClient():
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
         # Embedding Model
-        self.model = EmbedModel()
+        self.model = embedding_functions.DefaultEmbeddingFunction()
 
     def insert(self, doc):
         pass

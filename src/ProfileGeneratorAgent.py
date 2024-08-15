@@ -36,6 +36,7 @@ class ProfileGeneratorAgent:
                 "api_key": "ollama", 
                 "base_url": "http://localhost:11434/v1", 
                 #"temperature":0.0
+                "price" : [0.0, 0.0]
             }
         ]
 
@@ -63,9 +64,10 @@ class ProfileGeneratorAgent:
             system_message = f"""You are a supervisor in charge of a team of AI agents in a group chat. 
             You were given a plan of action, done up by the planner, to accomplish a specific task.
             Your job is to identify which step in the plan we are at, based on the previous messages in the group chat.
-            Following that, you are to instruct the next member of the team regarding the next step in the plan.
+            Following that, you are to instruct the next agent of the team regarding the next step in the plan.
             Ensure that your instructions adhere to the order of steps given in the plan.
             Keep your instructions as short as possible and relevant to the overall task.
+            Note that, if the previous agent did not return anything, you do not need to repeat their task. Just move on to the next agent and instruct them.
 
             The task description follows:
             {task} """,
@@ -74,8 +76,8 @@ class ProfileGeneratorAgent:
 
         self.extractor = AssistantAgent(
             name = "Extractor",
-            system_message=f"""Your job is to extract the text relevant to a web search from the text dump of a webpage.
-            The text dump is provided in the previous message.
+            system_message=f"""You will be provided with the text dump of a webpage in a previous message.
+            Your job is to extract the text relevant to the search terms used by Internal Searcher previously.
             The exact terms used in the web search can be found in one of the previous messages from Internal Searcher.
             """,
             llm_config={"config_list": self.config_list, "cache_seed": None},
