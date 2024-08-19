@@ -12,7 +12,7 @@ class ChromaClient():
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
         # Embedding Model
-        self.model = embedding_functions.DefaultEmbeddingFunction()
+        self.embedding_function = embedding_functions.DefaultEmbeddingFunction()
 
     def insert(self, doc):
         pass

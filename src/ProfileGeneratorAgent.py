@@ -62,9 +62,12 @@ class ProfileGeneratorAgent:
         self.supervisor = AssistantAgent(
             name = "Supervisor",
             system_message = f"""You are a supervisor in charge of a team of AI agents in a group chat. 
-            You were given a plan of action, done up by the planner, to accomplish a specific task.
-            Your job is to identify which step in the plan we are at, based on the previous messages in the group chat.
-            Following that, you are to instruct the next agent of the team regarding the next step in the plan.
+            Your task is to supervise your team of AI agents to accomplish the goal in the given prompt, by instructing each agent on what to do.
+            Your instructions should be based on the following plan:
+            Step 1. Find a list of all speakers by performing an online search using the search_and_crawl tool
+            Step 2. For each speaker, perform an online search using the search_and_crawl tool
+            Step 3. For each speaker, perform an internal search using the internal_search tool
+            Step 4. Synthesize the profiles of all speakers
             Ensure that your instructions adhere to the order of steps given in the plan.
             Keep your instructions as short as possible and relevant to the overall task.
             Note that, if the previous agent did not return anything, you do not need to repeat their task. Just move on to the next agent and instruct them.
@@ -76,9 +79,12 @@ class ProfileGeneratorAgent:
 
         self.extractor = AssistantAgent(
             name = "Extractor",
-            system_message=f"""You will be provided with the text dump of a webpage in a previous message.
-            Your job is to extract the text relevant to the search terms used by Internal Searcher previously.
-            The exact terms used in the web search can be found in one of the previous messages from Internal Searcher.
+            system_message=f"""You will be provided with the text dump of a webpage in the previous message.
+            Your job is to extract the text relevant to the task.
+            Ignore all privacy policy, copyright, search or cookie-related terms. Ignore all functional terms like "previous", "next" and "book now". Ignore all common, repeated and filler words if they do not directly contribute to the task.
+
+            The task description follows:
+            {task}
             """,
             llm_config={"config_list": self.config_list, "cache_seed": None},
         )
@@ -126,13 +132,14 @@ class ProfileGeneratorAgent:
             """
             messages = groupchat.messages
 
-            ordering = [self.planner,
-                        self.supervisor,
+            ordering = [self.supervisor,
                         self.external_searcher,
                         self.user_proxy,
                         self.extractor,
                         self.supervisor,
-                        self.writer,
+                        self.external_searcher,
+                        self.user_proxy,
+                        self.extractor,
                         self.supervisor,
                         self.internal_searcher,
                         self.user_proxy,
