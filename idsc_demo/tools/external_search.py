@@ -52,6 +52,6 @@ def search_and_crawl(
     #for url, extract in zip(urls,extracts):
         #print(f"Extracted from ${url}:")
         #print(extract + "\n")
-    return "#Search results: " + "\n".join(extracts) 
+    return "EXTERNAL SEARCH RESULTS: " + "\n".join(extracts) 
 
 read_webpage("https://en.wikipedia.org/wiki/IMac_G3")
