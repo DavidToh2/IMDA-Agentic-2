@@ -127,6 +127,9 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
     messages = groupchat.messages
     if messages != []:
         post_internal_message(messages[-1])
+        if last_speaker is writer:
+            post_message(messages[-1])
+        
 
     ordering = [orchestrator,
                 supervisor,
