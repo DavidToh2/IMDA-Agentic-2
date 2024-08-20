@@ -13,5 +13,5 @@ def internal_search(
     n=3,
 ):
     res = collection.query(query_texts=[query], n_results=n)
-    return "\n".join(res['documents'][0])
+    return "INTERNAL SEARCH RESULTS: \n" + '\n'.join(res['documents'][0])
 
