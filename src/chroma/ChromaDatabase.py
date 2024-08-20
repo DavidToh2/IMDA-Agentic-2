@@ -4,6 +4,7 @@ import chromadb
 import os
 
 from typing_extensions import Annotated
+from langchain_core.tools import tool
 
 class ChromaDatabase(ChromaClient):
     def __init__(self):
@@ -21,15 +22,17 @@ class ChromaDatabase(ChromaClient):
             self.collection = self.vectorstore.get_collection(name="internal_info")
 
     def internal_search(self, qn, k):
-        print("---- Starting similarity search on Chroma database ----\n")
+        # print("---- Starting similarity search on Chroma database ----\n")
         res = self.collection.query(query_texts=[qn], n_results=k)['documents'][0]
-        print(res)
+        # print(res)
         print("---- Similarity search finished on Chroma database ----\n")
         return res
     
     def insert(self, document):
         pass
 
-def internal_search(qn: Annotated[str, "Query to search for"], k=3):
+@tool
+def internal_search(internal_search_query: Annotated[str, "Query to search for"], k=3):
+    """Search the local internal database for information pertaining to the query."""
     chroma_db = ChromaDatabase()
-    return chroma_db.internal_search(qn, k)
+    return chroma_db.internal_search(internal_search_query, k)

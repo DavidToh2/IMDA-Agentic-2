@@ -22,12 +22,12 @@ class WebpageCrawler:
         self.driver.implicitly_wait(10)
         txt_arr = []
         try:
-            b = self.driver.find_element(by=By.TAG_NAME, value="body")
-            res = b.text
-            # txt_elements = self.driver.find_elements(by=By.TAG_NAME, value="p")
-            # for txt_element in txt_elements:
-            #     txt_arr.append(txt_element.text)
-            # res = " ".join(txt_arr)
+            # b = self.driver.find_element(by=By.TAG_NAME, value="body")
+            # res = b.text
+            txt_elements = self.driver.find_elements(by=By.TAG_NAME, value="p")
+            for txt_element in txt_elements:
+                txt_arr.append(txt_element.text)
+            res = " ".join(txt_arr)
             return res
         except:
             return ""

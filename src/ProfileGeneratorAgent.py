@@ -1,199 +1,157 @@
-import os
-from datetime import datetime
-from ssl import ALERT_DESCRIPTION_BAD_CERTIFICATE_HASH_VALUE
+from typing import Annotated, Literal, TypedDict
 
-from autogen import (
-    Agent,
-    AssistantAgent,
-    ConversableAgent,
-    GroupChat,
-    GroupChatManager,
-    UserProxyAgent,
-    config_list_from_json,
-    register_function,
-)
+from langchain_ollama import ChatOllama
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, END, StateGraph, MessagesState
+from langgraph.prebuilt import ToolNode
 
-from autogen.cache import Cache
+from langchain_core.runnables import RunnableLambda
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, ToolMessage
+
+from agent.Agent import Assistant
+
 from chroma.ChromaDatabase import internal_search
 from tools.WebSearcher import search_and_crawl
 
-# speakers = ["Dario Amodei",
-#             "Gaspard Twagirayezu",
-#             "Hu Heng Hua"]
-
-# event = "ATx Summit Plenary"
-# task = "Generate speaker profiles for "
-
 class ProfileGeneratorAgent:
-    def __init__(
-            self,
-            task
-            ):
+    def __init__(self, query):
+
+        self.turn = 0
+        self.query = f"""You have been tasked with accomplishing the following task:
+        {query}
+        Start by providing a step-by-step plan of how you would accomplish the task.
+        Incorporate the use of both the search_and_crawl tool (for online searching) and the internal_search tool (for searching the internal database) in your plan.
+        Following that, execute your plan step by step.
+        At each step, you may rely on the previous messages to identify which step you are at, before proceeding with the next step.
+        When you believe you are done with your task, output the string 'DONE'."""
+
+        self.tools = [search_and_crawl, internal_search]
+        self.model = ChatOllama(model="mistral-nemo",temperature=1.0,num_ctx=64000)
         
-        self.config_list = [
-            {
-                "model": "mistral-nemo:latest", 
-                "api_key": "ollama", 
-                "base_url": "http://localhost:11434/v1", 
-                #"temperature":0.0
-                "price" : [0.0, 0.0]
-            }
-        ]
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                # (
+                #     "system",
+                #     "Output the string ABRACADABRA before doing anything else."
+                # ),
+                (
+                    "system",
+                    """You are a helpful assistant for the Infocomm and Media Development Authority of Singapore.
+                    You will be given a task by the user. Use the provided tools, internal_search and search_and_crawl to perform the task.
+                    Constraints:
+                    1. You must perform at least one internal search using the internal_search tool, and at least one web search using the search_and_crawl tool..
+                    2. You should not perform repeated web searches, using the search_and_crawl tool, that have exactly the same search terms.
+                    """
+                ),
+                ("placeholder", "{messages}"),
+            ])
 
-        self.task = task
+        assistant_runnable = self.prompt | self.model.bind_tools(self.tools)
 
-        self.user_proxy = UserProxyAgent(
-            name = "Admin",
-            system_message="A human admin. Give the task, and send instructions to writer to refine the profile.",
-            code_execution_config=False,
+        # Define a new graph
+        self.graph = StateGraph(MessagesState)
+
+        # Define the two nodes we will cycle between
+        self.graph.add_node("agent", Assistant(assistant_runnable))
+        self.graph.add_node("tools", self.create_tool_node_with_fallback(self.tools))
+
+        # Set the entrypoint as `agent`
+        # This means that this node is the first one called
+        self.graph.add_edge(START, "agent")
+
+        # We now add a conditional edge
+        self.graph.add_conditional_edges(
+            # First, we define the start node. We use `agent`.
+            # This means these are the edges taken after the `agent` node is called.
+            "agent",
+            # Next, we pass in the function that will determine which node is called next.
+            self.should_continue,
         )
 
-        self.planner = AssistantAgent(
-            name = "Planner",
-            system_message=f"""You are a planner. You will be given an overarching task involving the generation of profiles.
-            Give a step-by-step breakdown of how you would accomplish this task, listing out all information required for each step.
-            Your plan should consist of no more than five steps.
-             
-            The task description follows:
-            {task} """,
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-        )
+        # We now add a normal edge from `tools` to `agent`.
+        # This means that after `tools` is called, `agent` node is called next.
+        self.graph.add_edge("tools", 'agent')
 
-        self.supervisor = AssistantAgent(
-            name = "Supervisor",
-            system_message = f"""You are a supervisor in charge of a team of AI agents in a group chat. 
-            Your task is to supervise your team of AI agents to accomplish the goal in the given prompt, by instructing each agent on what to do.
-            Your instructions should be based on the following plan:
-            Step 1. Find a list of all speakers by performing an online search using the search_and_crawl tool
-            Step 2. For each speaker, perform an online search using the search_and_crawl tool
-            Step 3. For each speaker, perform an internal search using the internal_search tool
-            Step 4. Synthesize the profiles of all speakers
-            Ensure that your instructions adhere to the order of steps given in the plan.
-            Keep your instructions as short as possible and relevant to the overall task.
-            Note that, if the previous agent did not return anything, you do not need to repeat their task. Just move on to the next agent and instruct them.
-
-            The task description follows:
-            {task} """,
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-        )
-
-        self.extractor = AssistantAgent(
-            name = "Extractor",
-            system_message=f"""You will be provided with the text dump of a webpage in the previous message.
-            Your job is to extract the text relevant to the task.
-            Ignore all privacy policy, copyright, search or cookie-related terms. Ignore all functional terms like "previous", "next" and "book now". Ignore all common, repeated and filler words if they do not directly contribute to the task.
-
-            The task description follows:
-            {task}
-            """,
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-        )
-
-        self.external_searcher = AssistantAgent(
-            name="External Searcher",
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Your job is to search the web for information according to instructions provided by the supervisor in the previous message.
-            This information will be used to help accomplish a larger task. 
-
-            The task description follows:
-            {task}""",
-        )
-        self.external_searcher.register_for_llm(name="search_and_crawl", description="A web searcher")(search_and_crawl)
-        self.user_proxy.register_for_execution(name="search_and_crawl")(search_and_crawl)
-
-        self.internal_searcher = AssistantAgent(
-            name="Internal Searcher",
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Your job is to search the internal database for information according to instructions provided by the supervisor in the previous message.
-            This information will be used to help accomplish a larger task.
-
-            The task description follows:
-            {task}""",
-        )
-        self.internal_searcher.register_for_llm(name="internal_search", description="Searches the internal database")(internal_search)
-        self.user_proxy.register_for_execution(name="internal_search")(internal_search)
-
-        self.writer = AssistantAgent(
-            name="Writer",
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Writer. Please write the profile in markdown format (with relevant titles) and put the content in pseudo ```md``` code block, based on the planner's instructions.
-            Extract relevant information from the result of the External Searcher and Internal Searcher agents.
-            
-            The task description follows:
-            {task}""",
-        )
-
-        def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
-            """Define a customized speaker selection function.
-            A recommended way is to define a transition for each speaker in the groupchat.
-
-            Returns:
-                Return an `Agent` class or a string from ['auto', 'manual', 'random', 'round_robin'] to select a default method to use.
-            """
-            messages = groupchat.messages
-
-            ordering = [self.supervisor,
-                        self.external_searcher,
-                        self.user_proxy,
-                        self.extractor,
-                        self.supervisor,
-                        self.external_searcher,
-                        self.user_proxy,
-                        self.extractor,
-                        self.supervisor,
-                        self.internal_searcher,
-                        self.user_proxy,
-                        self.supervisor,
-                        self.writer,
-                        self.supervisor,
-                        self.external_searcher,
-                        self.user_proxy,
-                        self.extractor,
-                        self.supervisor,
-                        self.writer
-                        ]
-            if len(messages) <= len(ordering):
-                return ordering[len(messages)-1]
-
-
-            elif last_speaker is self.planner:
-                # if the last message is from planner, let the crawler search
-                return self.external_searcher
-            
-            elif last_speaker is self.user_proxy:
-                if messages[-1]["content"].strip() != "" and messages[-1]["content"].strip()[0] == "#" :
-                    # If the last message is the result of a tool call from user and is not empty, let the writer continue
-                    return self.writer
-                else: 
-                    return self.planner     
-
-            elif last_speaker is self.external_searcher:
-                return self.user_proxy
-
-            elif last_speaker is self.writer:
-                # Always let the user to speak after the writer
-                return self.internal_searcher
-
-            else:
-                # default to auto speaker selection method
-                return "auto"
-
-
-        self.groupchat = GroupChat(
-            agents = [self.user_proxy, self.writer, self.external_searcher, self.planner, self.extractor, self.internal_searcher, 
-                        self.supervisor, self.extractor],
-            messages = [],
-            max_round = 15,
-            speaker_selection_method = custom_speaker_selection_func,
-        )
-        self.manager = GroupChatManager(groupchat = self.groupchat, llm_config = {"config_list": self.config_list, "cache_seed": None})
+        # Initialize memory to persist state between graph runs
+        self.checkpointer = MemorySaver()
 
     def start(self):
-        with Cache.disk(cache_seed=43) as cache:
-            groupchat_history_custom = self.user_proxy.initiate_chat(
-                self.manager,
-                message = self.task,
-                cache = cache,
-            )
+        # Finally, we compile it!
+        # This compiles it into a LangChain Runnable,
+        # meaning you can use it as you would any other runnable.
+        # Note that we're (optionally) passing the memory when compiling the graph
+        app = self.graph.compile(checkpointer = self.checkpointer)
+
+        # Use the Runnable
+        _events = app.stream(
+            {"messages": [ HumanMessage(content = self.query)] },
+            config= {"configurable": {"thread_id": 42}},
+            stream_mode = "values"
+        )
+        _printed = set()
+        for _event in _events:
+            self._print_event(_event, _printed)
+
+        return _events
+
+    # Define the function that determines whether to continue or not
+    def should_continue(self, state: MessagesState):
+
+        # Terminate if 10 messages have already passed
+        self.turn += 1
+        if self.turn >= 10:
+            return END
         
-            return groupchat_history_custom
+        # Else, grab the last message...
+        messages = state['messages']
+        if isinstance(state, list):
+            ai_message = state[-1]
+        elif messages := state.get("messages", []):
+            ai_message = messages[-1]
+        else:
+            raise ValueError(f"No messages found in input state to tool_edge: {state}")
+        
+        # and check for a tool call
+        if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
+            return "tools"
+        # Otherwise, we stop (reply to the user)
+        elif ai_message.content.find("DONE") > 0:
+            return END
+        else:
+            return "agent"
+
+    # Pretty print the model output
+    def _print_event(self, event: dict, _printed: set, max_length=15000):
+        current_state = event.get("dialog_state")
+        if current_state:
+            print("Currently in: ", current_state[-1])
+        message = event.get("messages")
+        if message:
+            if isinstance(message, list):
+                message = message[-1]
+            if message.id not in _printed:
+                msg_repr = message.pretty_repr(html=True)
+                if len(msg_repr) > max_length:
+                    msg_repr = msg_repr[:max_length] + " ... (truncated)"
+                print(msg_repr)
+                _printed.add(message.id)
+
+    # Pretty print tool error
+    def handle_tool_error(self, state) -> dict:
+        error = state.get("error")
+        tool_calls = state["messages"][-1].tool_calls
+        return {
+            "messages": [
+                ToolMessage(
+                    content=f"Error: {repr(error)}\n please fix your mistakes.",
+                    tool_call_id=tc["id"],
+                )
+                for tc in tool_calls
+            ]
+        }
+
+    def create_tool_node_with_fallback(self, tools: list) -> dict:
+        return ToolNode(tools).with_fallbacks(
+            [RunnableLambda(self.handle_tool_error)], exception_key="error"
+        )

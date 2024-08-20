@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from typing_extensions import Annotated
 
 from tools.WebpageCrawler import WebpageCrawler
+from langchain_core.tools import tool
 
 class WebSearcher:
     def __init__(self, blacklist=['google', 'youtu']):
@@ -45,7 +46,9 @@ class WebSearcher:
             #print(f"Extracted from ${url}:")
             #print(extract + "\n")
         return "#Search results: " + "\n".join(extracts)    
-    
-def search_and_crawl(query: Annotated[str, 'Query to search for'], n=3):
+
+@tool
+def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 1):
+    """Search the web for information on the query."""
     web_searcher = WebSearcher()
-    return web_searcher.search_and_crawl(query, n)
+    return web_searcher.search_and_crawl(online_search_query, num_pages)
