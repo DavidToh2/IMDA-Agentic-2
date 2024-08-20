@@ -10,6 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, ToolMessage
 
 from agent.Agent import Assistant
+from tools.MessagePoster import MessagePoster
 
 from chroma.ChromaDatabase import internal_search
 from tools.WebSearcher import search_and_crawl
@@ -18,6 +19,7 @@ class ProfileGeneratorAgent:
     def __init__(self, query):
 
         self.turn = 0
+        self.MAX_TURNS = 20
         self.query = f"""You have been tasked with accomplishing the following task:
         {query}
         Start by providing a step-by-step plan of how you would accomplish the task.
@@ -27,7 +29,7 @@ class ProfileGeneratorAgent:
         When you believe you are done with your task, output the string 'DONE'."""
 
         self.tools = [search_and_crawl, internal_search]
-        self.model = ChatOllama(model="mistral-nemo",temperature=1.0,num_ctx=64000)
+        self.model = ChatOllama(model="mistral-nemo",temperature=1.0,num_ctx=16000)
         
         self.prompt = ChatPromptTemplate.from_messages(
             [
@@ -76,6 +78,8 @@ class ProfileGeneratorAgent:
         # Initialize memory to persist state between graph runs
         self.checkpointer = MemorySaver()
 
+        self.message_poster = MessagePoster()
+
     def start(self):
         # Finally, we compile it!
         # This compiles it into a LangChain Runnable,
@@ -100,10 +104,8 @@ class ProfileGeneratorAgent:
 
         # Terminate if 10 messages have already passed
         self.turn += 1
-        if self.turn >= 10:
-            return END
         
-        # Else, grab the last message...
+        # Grab the last message...
         messages = state['messages']
         if isinstance(state, list):
             ai_message = state[-1]
@@ -111,15 +113,25 @@ class ProfileGeneratorAgent:
             ai_message = messages[-1]
         else:
             raise ValueError(f"No messages found in input state to tool_edge: {state}")
+
+        # If 10 turns, terminate
+        if self.turn >= self.MAX_TURNS:
+            self.message_poster.post_message(ai_message)
+            self.message_poster.post_message(f"MAX NO. OF TURNS REACHED", mode="debug")
+            return END
         
-        # and check for a tool call
+        # Otherwise, check for a tool call
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
             return "tools"
+        
         # Otherwise, we stop (reply to the user)
-        elif ai_message.content.find("DONE") > 0:
+        if ai_message.content.find("DONE") > 0:
+            self.message_poster.post_message(ai_message)
+            self.message_poster.post_message("OUTPUT SUCCESS", mode="debug")
             return END
-        else:
-            return "agent"
+        
+        self.message_poster.post_message(ai_message)
+        return "agent"
 
     # Pretty print the model output
     def _print_event(self, event: dict, _printed: set, max_length=15000):
