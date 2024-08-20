@@ -1,7 +1,7 @@
 import requests
 from typing_extensions import Annotated
 def post_message(message:Annotated[str, "message to be posted"],mode='groupchat'):
-    url = 'https://hooks.slack.com/services/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'
+    url = 'https://hooks.slack.com/services/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'
     if mode == "groupchat":
         content = message['content']
         myobj = {
@@ -29,3 +29,5 @@ def post_internal_message(message,sender="Agent",mode="groupchat"):
         "text": message
         }
         requests.post(url, json = myobj)
+
+post_message("Hello DTO!", 'd')
