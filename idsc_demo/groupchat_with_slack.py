@@ -131,19 +131,19 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
             post_message(messages[-1])
         
 
-    ordering = [orchestrator,
+    ordering = [orchestrator,       # Generates template of information required
                 supervisor,
-                external_searcher,
+                external_searcher,  # Online search
                 user_proxy,
-                writer,
-                slack_proxy,
+                writer,             # Update speaker profile based on online search
+                slack_proxy,        # SEND
                 supervisor,
-                internal_searcher,
+                internal_searcher,  # Internal database search
                 user_proxy,
-                writer,
-                slack_proxy,
+                writer,             # Update speaker profile based on internal database search
+                slack_proxy,        # SEND (also ends here)
                 supervisor,
-                internal_searcher,
+                internal_searcher,  
                 user_proxy,
                 writer,
                 slack_proxy
@@ -184,7 +184,6 @@ groupchat = GroupChat(
 manager = GroupChatManager(groupchat=groupchat, 
                            llm_config={"config_list": config_list, "cache_seed": None},
                            is_termination_msg=lambda msg: "TERMINATE" in msg["content"])
-
 
 user_proxy.initiate_chat(
         manager,

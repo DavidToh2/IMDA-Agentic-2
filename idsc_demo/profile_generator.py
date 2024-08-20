@@ -95,19 +95,19 @@ summariser = AssistantAgent(
     """,
 )
 
-post_internal_message("LOG STARTING...",mode='direct')
+post_internal_message("LOG STARTING FOR profile_generator.py...",mode='direct')
 post_message("STARTING WORKFLOW...",mode='direct')
 post_message("PROMPT: "+task, mode='direct')
-ordering = [orchestrator,
-            supervisor,
-            external_searcher,
+ordering = [orchestrator,       # Determine the information necessary for the task
+            supervisor,         # Remind the next member of the team to search for {speaker}
+            external_searcher,  # Online search
             user_proxy,
-            writer,
-            supervisor,
-            internal_searcher,
+            writer,             # Summarise online information
+            supervisor,         # Remind the next member of the team to search for {speaker}
+            internal_searcher,  # Offline search
             user_proxy,
-            writer,        
-            summariser,]
+            writer,             # Summarise offline information
+            summariser,]        # Summarise both
 
 def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
     """Define a customized speaker selection function.
