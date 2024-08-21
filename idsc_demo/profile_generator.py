@@ -170,7 +170,8 @@ manager = GroupChatManager(groupchat=groupchat,
                            llm_config={"config_list": config_list, "cache_seed": None},
                            is_termination_msg=lambda msg: "TERMINATE" in msg["content"])
 
-with Cache.disk(cache_seed=49) as cache:
+# Keep 49 as cache for demo
+with Cache.disk(cache_seed=54) as cache:
     groupchat_history_custom = user_proxy.initiate_chat(
         manager,
         message=task,
