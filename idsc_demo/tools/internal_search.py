@@ -9,7 +9,7 @@ default_ef = embedding_functions.DefaultEmbeddingFunction()
 collection = client.get_collection(name="internal_info", embedding_function=default_ef)
 
 def internal_search(
-    query: Annotated[str, 'query to search for in internal database'],
+    query: Annotated[str, 'speaker to search for in internal database'],
     n=3,
 ):
     res = collection.query(query_texts=[query], n_results=n)
