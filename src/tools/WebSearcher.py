@@ -6,11 +6,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from typing_extensions import Annotated
 
-from tools.WebpageCrawler import WebpageCrawler
 from langchain_core.tools import tool
 
 class WebSearcher:
-    def __init__(self, blacklist=['google', 'youtu', 'wikipedia']):
+    def __init__(self, blacklist=['google', 'youtu', 'linkedin']):
         self.driver = webdriver.Firefox()
         self.blacklist = set(blacklist)
 
@@ -35,12 +34,11 @@ class WebSearcher:
             query,
             n=3
         ):
-        web_crawler = WebpageCrawler()
         urls = self.google_search(query, n)
         extracts = []
         for url in urls:
-            extract = web_crawler.read_webpage(url)
-            print(extract)
+            print(f"---- Crawling url {url} ----")
+            extract = self.read_webpage(url)
             l = max(len(extract), 8000)
             extracts.append(extract[:l])
         
@@ -48,13 +46,37 @@ class WebSearcher:
             #print(f"Extracted from ${url}:")
             #print(extract + "\n")
         res = "SEARCH RESULTS: " + "\n".join(extracts)  
-        print(f"=== EXTERNAL SEARCH COMPLETE ===")
-        print(res)
-        return res  
+        print(f"---- External search complete ----")
+        return res
+
+    def screenshot_webpage(self, url):
+        self.driver.get(url)
+        self.driver.implicitly_wait(10)
+        self.driver.get_full_page_screenshot_as_file("test.png")
+            
+    def read_webpage(self, url):
+        self.driver.get(url)
+        self.driver.implicitly_wait(10)
+        txt_arr = []
+        try:
+            # b = self.driver.find_element(by=By.TAG_NAME, value="body")
+            # res = b.text
+            txt_elements = self.driver.find_elements(by=By.TAG_NAME, value="p")
+            for txt_element in txt_elements:
+                txt_arr.append(txt_element.text)
+            res = " ".join(txt_arr)
+            return res
+        except:
+            return ""
+
+    def close(self):
+        self.driver.close()
 
 @tool
-def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 1):
+def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 3):
     """Search the web for information on the query.
     """
     web_searcher = WebSearcher()
-    return web_searcher.search_and_crawl(online_search_query, num_pages)
+    res = web_searcher.search_and_crawl(online_search_query, num_pages)
+    web_searcher.close()
+    return res
