@@ -33,6 +33,7 @@ class ChromaDatabase(ChromaClient):
 
 @tool
 def internal_search(internal_search_query: Annotated[str, "Query to search for"], k=3):
-    """Search the local internal database for information pertaining to the query."""
+    """Search the local internal database for information pertaining to the query.
+    """
     chroma_db = ChromaDatabase()
     return chroma_db.internal_search(internal_search_query, k)

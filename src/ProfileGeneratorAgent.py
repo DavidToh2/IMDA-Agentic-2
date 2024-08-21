@@ -7,7 +7,8 @@ from langgraph.prebuilt import ToolNode
 
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
+from langchain_core.runnables import Runnable
 
 from agent.Agent import Assistant
 from tools.MessagePoster import MessagePoster
@@ -16,20 +17,22 @@ from chroma.ChromaDatabase import internal_search
 from tools.WebSearcher import search_and_crawl
 
 class ProfileGeneratorAgent:
-    def __init__(self, query):
+    def __init__(self, prompt, detailed_instructions):
 
         self.turn = 0
         self.MAX_TURNS = 20
+        self.CTX_SIZE = 16000
+
         self.query = f"""You have been tasked with accomplishing the following task:
-        {query}
-        Start by providing a step-by-step plan of how you would accomplish the task.
-        Incorporate the use of both the search_and_crawl tool (for online searching) and the internal_search tool (for searching the internal database) in your plan.
-        Following that, execute your plan step by step.
-        At each step, you may rely on the previous messages to identify which step you are at, before proceeding with the next step.
-        When you believe you are done with your task, output the string 'DONE'."""
+        {prompt}
+        {detailed_instructions}
+        
+        Execute your plan step by step. Incorporate the use of BOTH the internal_search and search_and_crawl tools in your execution.
+        At each step, you must rely on the previous messages to identify which step you are at, before proceeding with the next step.
+        When you have completed your task, output the string 'DONE' to terminate the interaction."""
 
         self.tools = [search_and_crawl, internal_search]
-        self.model = ChatOllama(model="mistral-nemo",temperature=1.0,num_ctx=16000)
+        self.model = ChatOllama(model="mistral-nemo",temperature=0.8,num_ctx=self.CTX_SIZE)
         
         self.prompt = ChatPromptTemplate.from_messages(
             [
@@ -39,11 +42,13 @@ class ProfileGeneratorAgent:
                 # ),
                 (
                     "system",
-                    """You are a helpful assistant for the Infocomm and Media Development Authority of Singapore.
-                    You will be given a task by the user. Use the provided tools, internal_search and search_and_crawl to perform the task.
+                    f"""You are a helpful assistant for the Infocomm and Media Development Authority of Singapore.
+                    You were assigned the following task by the user: {prompt}
+                    Use the provided tools, internal_search and search_and_crawl, to perform the task.
                     Constraints:
                     1. You must perform at least one internal search using the internal_search tool, and at least one web search using the search_and_crawl tool..
-                    2. You should not perform repeated web searches, using the search_and_crawl tool, that have exactly the same search terms.
+                    2. DO NOT REPEAT ANY TOOL CALLS YOU HAVE ALREADY DONE.
+                    3. When tool calling, you must follow the correct Langchain syntax. Do not write code nor use any codeblocks (i.e. no use of ```) at any point. If your tool call returns with no output, it means you have failed to use the correct syntax: fix your syntax and try again.
                     """
                 ),
                 ("placeholder", "{messages}"),
@@ -116,20 +121,24 @@ class ProfileGeneratorAgent:
 
         # If 10 turns, terminate
         if self.turn >= self.MAX_TURNS:
+            print("===Max turns reached===")
             self.message_poster.post_message(ai_message)
             self.message_poster.post_message(f"MAX NO. OF TURNS REACHED", mode="debug")
             return END
         
         # Otherwise, check for a tool call
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
+            print("===Tool call detected===")
             return "tools"
         
         # Otherwise, we stop (reply to the user)
         if ai_message.content.find("DONE") > 0:
+            print("===Output success===")
             self.message_poster.post_message(ai_message)
             self.message_poster.post_message("OUTPUT SUCCESS", mode="debug")
             return END
         
+        print("===It's the agent's turn again===")
         self.message_poster.post_message(ai_message)
         return "agent"
 
@@ -141,7 +150,11 @@ class ProfileGeneratorAgent:
         message = event.get("messages")
         if message:
             if isinstance(message, list):
-                message = message[-1]
+                if isinstance(message[-1], ToolMessage):
+                    message_2 = ToolMessage(content = " ".join([t.content for t in message]), tool_call_id = f"{message[-1].id}")
+                    message = message_2
+                else:
+                    message = message[-1]
             if message.id not in _printed:
                 msg_repr = message.pretty_repr(html=True)
                 if len(msg_repr) > max_length:

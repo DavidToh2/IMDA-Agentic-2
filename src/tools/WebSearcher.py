@@ -10,7 +10,7 @@ from tools.WebpageCrawler import WebpageCrawler
 from langchain_core.tools import tool
 
 class WebSearcher:
-    def __init__(self, blacklist=['google', 'youtu']):
+    def __init__(self, blacklist=['google', 'youtu', 'wikipedia']):
         self.driver = webdriver.Firefox()
         self.blacklist = set(blacklist)
 
@@ -40,15 +40,21 @@ class WebSearcher:
         extracts = []
         for url in urls:
             extract = web_crawler.read_webpage(url)
-            extracts.append(extract)
+            print(extract)
+            l = max(len(extract), 8000)
+            extracts.append(extract[:l])
         
         #for url, extract in zip(urls,extracts):
             #print(f"Extracted from ${url}:")
             #print(extract + "\n")
-        return "#Search results: " + "\n".join(extracts)    
+        res = "SEARCH RESULTS: " + "\n".join(extracts)  
+        print(f"=== EXTERNAL SEARCH COMPLETE ===")
+        print(res)
+        return res  
 
 @tool
 def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 1):
-    """Search the web for information on the query."""
+    """Search the web for information on the query.
+    """
     web_searcher = WebSearcher()
     return web_searcher.search_and_crawl(online_search_query, num_pages)

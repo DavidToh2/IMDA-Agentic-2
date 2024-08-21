@@ -10,8 +10,7 @@ class Assistant:
     def __call__(self, state: MessagesState, config: RunnableConfig):
         while True:
             configuration = config.get("configurable", {})
-            passenger_id = configuration.get("passenger_id", None)
-            state = {**state, "user_info": passenger_id}
+            state = {**state}
             result = self.runnable.invoke(state)
             # If the LLM happens to return an empty response, we will re-prompt it
             # for an actual response.
