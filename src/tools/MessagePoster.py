@@ -1,4 +1,4 @@
-
+import re
 import requests
 from typing_extensions import Annotated
 from langchain_core.messages import AnyMessage
@@ -12,7 +12,7 @@ class MessagePoster:
 
         if mode == "groupchat":
             content = self._format_message(message.content)
-            for p in content.split("\n"):
+            for p in content.split("\n\n"):
                 myobj = {
                     "blocks": [{
                         "type": "section",
@@ -24,7 +24,7 @@ class MessagePoster:
                 }
                 requests.post(self.URL_OUTPUT, json = myobj)
         else:
-            for p in self._format_message(message).split("\n"):
+            for p in self._format_message(message).split("\n\n"):
                 myobj = {
                     "blocks": [{
                         "type": "section",

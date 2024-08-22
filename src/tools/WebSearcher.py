@@ -3,13 +3,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import re
 
 from typing_extensions import Annotated
 
 from langchain_core.tools import tool
 
 class WebSearcher:
-    def __init__(self, blacklist=['google', 'youtu', 'linkedin']):
+    def __init__(self, blacklist=['google', 'youtu', 'linkedin', 'forbes']):
         self.driver = webdriver.Firefox()
         self.blacklist = set(blacklist)
 
@@ -25,7 +26,7 @@ class WebSearcher:
         self.driver.maximize_window()
         self.driver.get("https://www.google.com/search?q="+query)
 
-        links = list(map(lambda x : x.get_attribute("href"), self.driver.find_elements(By.XPATH, "//a[@href]"))) 
+        links = list(dict.fromkeys(map(lambda x : x.get_attribute("href"), self.driver.find_elements(By.XPATH, "//a[@href][./h3]")))) 
         links = [link for link in links if self.link_not_blacklisted(link)]
         return links[0:n]
     
@@ -39,7 +40,7 @@ class WebSearcher:
         for url in urls:
             print(f"---- Crawling url {url} ----")
             extract = self.read_webpage(url)
-            l = max(len(extract), 8000)
+            l = max(len(extract), 4000)
             extracts.append(extract[:l])
         
         #for url, extract in zip(urls,extracts):
@@ -64,7 +65,7 @@ class WebSearcher:
             txt_elements = self.driver.find_elements(by=By.TAG_NAME, value="p")
             for txt_element in txt_elements:
                 txt_arr.append(txt_element.text)
-            res = " ".join(txt_arr)
+            res = re.sub(r"\[[0-9]+\]", '', " ".join(txt_arr))
             return res
         except:
             return ""
@@ -73,10 +74,13 @@ class WebSearcher:
         self.driver.close()
 
 @tool
-def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 3):
+def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 2):
     """Search the web for information on the query.
     """
     web_searcher = WebSearcher()
     res = web_searcher.search_and_crawl(online_search_query, num_pages)
     web_searcher.close()
     return res
+
+# c = WebSearcher()
+# print(c.google_search("Dario Amodei"))

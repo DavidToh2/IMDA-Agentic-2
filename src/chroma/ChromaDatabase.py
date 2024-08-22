@@ -17,7 +17,7 @@ class ChromaDatabase(ChromaClient):
             self.collection = self.vectorstore.create_collection(name="internal_info", embedding_function=self.embedding_function)
             docs = FileReader().get_chunks()
             doc_chunks = self.split_docs(docs)
-            self.collection.add(documents=doc_chunks)
+            self.collection.add(documents=doc_chunks, ids=[str(i) for i in range(len(doc_chunks))])
         except chromadb.db.base.UniqueConstraintError:
             self.collection = self.vectorstore.get_collection(name="internal_info")
 

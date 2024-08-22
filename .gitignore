@@ -13,4 +13,5 @@ ui/node_modules/
 .env
 pyvenv.cfg
 *.log
-*/.cache
+*.cache
+*.vscode

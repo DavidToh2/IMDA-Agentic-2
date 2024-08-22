@@ -21,4 +21,4 @@ class ChromaClient():
         pass
 
     def split_docs(self, docs):
-        return self.text_splitter.split_documents(docs)
+        return [d.page_content for d in self.text_splitter.split_documents(docs)]

@@ -14,4 +14,6 @@ def main():
     pf = ProfileGeneratorAgent(prompt, detailed_instructions)
     pf.start()
 
+    # print(internal_search("Dario Amodei"))
+    
 main()
