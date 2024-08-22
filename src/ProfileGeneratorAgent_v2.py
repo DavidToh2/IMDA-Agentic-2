@@ -10,7 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langchain_core.runnables import Runnable
 
-from agent.Agent import Assistant
+from agent.Agent import Agent
 from tools.MessagePoster import MessagePoster
 
 from chroma.ChromaDatabase import internal_search
@@ -60,7 +60,7 @@ class ProfileGeneratorAgent:
         self.graph = StateGraph(MessagesState)
 
         # Define the two nodes we will cycle between
-        self.graph.add_node("agent", Assistant(assistant_runnable))
+        self.graph.add_node("agent", Agent(assistant_runnable))
         self.graph.add_node("tools", self.create_tool_node_with_fallback(self.tools))
 
         # Set the entrypoint as `agent`

@@ -5,8 +5,8 @@ from langchain_core.messages import AnyMessage
 
 class MessagePoster:
     def __init__(self):
-        self.URL_OUTPUT = 'https://hooks.slack.com/services/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'
-        self.URL_LOG = 'https://hooks.slack.com/services/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'
+        self.URL_OUTPUT = 'https://hooks.slack.com/services/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'
+        self.URL_LOG = 'https://hooks.slack.com/services/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'
 
     def post_message(self, message : AnyMessage, mode='groupchat'):
 

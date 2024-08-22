@@ -2,10 +2,11 @@
 from langgraph.graph import MessagesState
 from langchain_core.runnables import Runnable, RunnableConfig
 
-class Assistant:
+class Agent:
     def __init__(self, runnable: Runnable):
         self.runnable = runnable
         
+        self.CTX_SIZE = 16000
 
     def __call__(self, state: MessagesState, config: RunnableConfig):
         while True:
