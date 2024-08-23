@@ -20,16 +20,11 @@ from tools.post_message import post_internal_message
 
 speaker = "Dario Amodei"
 
-
-with open('atx_plenary.txt', 'r') as file:
-    memo = file.read()
-
-
 task = "Generate a speaker profile for " + speaker
 
 config_list = [
         {
-            "model": "mistral-nemo:latest", 
+            "model": "mistral-16K:latest", 
             "api_key": "ollama", 
             "base_url": "http://localhost:11434/v1", 
         }
@@ -67,15 +62,16 @@ user_proxy.register_for_execution(name="search_and_crawl")(search_and_crawl)
 supervisor = AssistantAgent(
     name="Supervisor",
     llm_config={"config_list": config_list, "cache_seed": None},
-    system_message=f"""Your only job is to remind the next agent to search for {speaker}""",
+    system_message=f"""Do not generate a profile. Your only job is to remind the next agent to search for {speaker}. """,
 )
 
 internal_searcher = AssistantAgent(
     name="Internal Searcher",
     llm_config={"config_list": config_list, "cache_seed": None},
-    system_message=f"""Internal Searcher. 
-        Your must perform an internal search for relevant information about {speaker}. 
+    system_message=f"""Internal Searcher. Do not generate a profile. 
+        Your only jon is to perform a internal search for relevant information about {speaker}. 
         You are equipped with the internal search tool which searches the internal database for information. 
+        You must use the internal search tool to search for {speaker}. 
 """,
 )
 internal_searcher.register_for_llm(name="internal_search", description="Searches the internal database for information")(internal_search)
@@ -103,7 +99,6 @@ post_internal_message("LOG STARTING FOR profile_generator.py...",mode='direct')
 post_message("STARTING WORKFLOW...",mode='direct')
 post_message("PROMPT: "+task, mode='direct')
 ordering = [orchestrator,
-           
             external_searcher,
             user_proxy,
             writer,             # Summarise online information
@@ -170,7 +165,7 @@ manager = GroupChatManager(groupchat=groupchat,
                            llm_config={"config_list": config_list, "cache_seed": None},
                            is_termination_msg=lambda msg: "TERMINATE" in msg["content"])
 
-# Keep 49 as cache for demo
+# Keep 54 with mistral-16K, executed from idsc_demo as the demo
 with Cache.disk(cache_seed=54) as cache:
     groupchat_history_custom = user_proxy.initiate_chat(
         manager,
