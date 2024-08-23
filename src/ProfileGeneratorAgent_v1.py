@@ -14,25 +14,19 @@ from autogen import (
 )
 
 from autogen.cache import Cache
-from chroma.ChromaDatabase import internal_search
-from tools.WebSearcher import search_and_crawl
-
-# speakers = ["Dario Amodei",
-#             "Gaspard Twagirayezu",
-#             "Hu Heng Hua"]
-
-# event = "ATx Summit Plenary"
-# task = "Generate speaker profiles for "
+from chroma.ChromaDatabase import internal_search_autogen
+from tools.WebSearcher import search_and_crawl_autogen
+from tools.MessagePoster import MessagePoster
 
 class ProfileGeneratorAgent:
     def __init__(
             self,
-            task
+            speaker
             ):
         
         self.config_list = [
             {
-                "model": "mistral-nemo:latest", 
+                "model": "mistral-16K:latest", 
                 "api_key": "ollama", 
                 "base_url": "http://localhost:11434/v1", 
                 #"temperature":0.0
@@ -40,89 +34,86 @@ class ProfileGeneratorAgent:
             }
         ]
 
-        self.task = task
+        self.task = "Generate a speaker profile for " + speaker
 
         self.user_proxy = UserProxyAgent(
-            name = "Admin",
+            name="User Proxy",
             system_message="A human admin. Give the task, and send instructions to writer to refine the profile.",
             code_execution_config=False,
         )
 
-        self.planner = AssistantAgent(
-            name = "Planner",
-            system_message=f"""You are a planner. You will be given an overarching task involving the generation of profiles.
-            Give a step-by-step breakdown of how you would accomplish this task, listing out all information required for each step.
-            Your plan should consist of no more than five steps.
-             
-            The task description follows:
-            {task} """,
+        self.orchestrator = AssistantAgent(
+            name="Orchestrator",
+            system_message=f"""Orchestrator. Please determine what information is needed to {self.task}. """,
             llm_config={"config_list": self.config_list, "cache_seed": None},
         )
 
         self.supervisor = AssistantAgent(
             name = "Supervisor",
-            system_message = f"""You are a supervisor in charge of a team of AI agents in a group chat. 
-            Your task is to supervise your team of AI agents to accomplish the goal in the given prompt.
-            Your instructions should be based on the following plan:
-            Step 1. Find a list of all speakers by performing an online search using the search_and_crawl tool
-            Step 2. For each speaker, perform an online search using the search_and_crawl tool
-            Step 3. For each speaker, perform an internal search using the internal_search tool
-            Step 4. Synthesize the profiles of all speakers
-            Ensure that your instructions adhere to the order of steps given in the plan.
-            Keep your instructions as short as possible and relevant to the overall task.
-            Note that, if the previous agent did not return anything, you do not need to repeat their task. Just move on to the next agent and instruct them.
-
-            The task description follows:
-            {task} """,
-            llm_config={"config_list": self.config_list, "cache_seed": None},
-        )
-
-        self.extractor = AssistantAgent(
-            name = "Extractor",
-            system_message=f"""You will be provided with the text dump of a webpage in the previous message.
-            Your job is to extract the text relevant to the task.
-            Ignore all privacy policy, copyright, search or cookie-related terms. Ignore all functional terms like "previous", "next" and "book now". Ignore all common, repeated and filler words if they do not directly contribute to the task.
-
-            The task description follows:
-            {task}
-            """,
+            system_message=f"""Supervisor. Ignore the group manager. Your only job is to remind the next member of the team to search for {speaker}.""",
             llm_config={"config_list": self.config_list, "cache_seed": None},
         )
 
         self.external_searcher = AssistantAgent(
             name="External Searcher",
             llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Your job is to search the web for information according to instructions provided by the supervisor in the previous message.
-            This information will be used to help accomplish a larger task. 
-
-            The task description follows:
-            {task}""",
+            system_message=f"""Your job is to search the web for relevant information as instructed by the supervisor. 
+            Keep your searches relevant to the speaker profiles provided by the supervisor. 
+            Make multiple searches if necessary. 
+        """,
         )
-        self.external_searcher.register_for_llm(name="search_and_crawl", description="A web searcher")(search_and_crawl)
-        self.external_searcher.register_for_execution(name="search_and_crawl")(search_and_crawl)
+        
+        self.external_searcher.register_for_llm(name="search_and_crawl", description="A web searcher")(search_and_crawl_autogen)
+        self.user_proxy.register_for_execution(name="search_and_crawl")(search_and_crawl_autogen)
+
+        self.supervisor = AssistantAgent(
+            name="Supervisor",
+            llm_config={"config_list": self.config_list, "cache_seed": None},
+            system_message=f"""Do not generate a profile. Your only job is to remind the next agent to search for {speaker}. 
+            Respond with 'Please search for {speaker}'""",
+        )
 
         self.internal_searcher = AssistantAgent(
             name="Internal Searcher",
             llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Your job is to search the internal database for information according to instructions provided by the supervisor in the previous message.
-            This information will be used to help accomplish a larger task.
-
-            The task description follows:
-            {task}""",
+            system_message=f"""Internal Searcher. Do not generate a profile. 
+                Your only job is to perform a internal search for relevant information about {speaker}. 
+                You are equipped with the internal search tool which searches the internal database for information. 
+                You are to respond with a tool call using the internal search tool to search for {speaker}. 
+        """,
         )
-        self.internal_searcher.register_for_llm(name="internal_search", description="Searches the internal database")(internal_search)
-        self.internal_searcher.register_for_execution(name="internal_search")(internal_search)
+        
+        self.internal_searcher.register_for_llm(name="internal_search", description="Searches the internal database for information")(internal_search_autogen)
+        self.user_proxy.register_for_execution(name="internal_search")(internal_search_autogen)
 
         self.writer = AssistantAgent(
             name="Writer",
             llm_config={"config_list": self.config_list, "cache_seed": None},
-            system_message=f"""Writer. Please write the profile in markdown format (with relevant titles) and put the content in pseudo ```md``` code block, based on the planner's instructions.
-            Extract relevant information from the result of the External Searcher and Internal Searcher agents.
-            
-            The task description follows:
-            {task}""",
+            system_message="""Writer. Your only job is to write the speaker profile in text based on the information provided by tool calls. 
+            If the information is prefaced by EXTERNAL SEARCH, preface your profile with the headline "EXTERNAL SEARCH"
+            If the information is prefaced by INTERNAL SEARCH, preface your profile with the headline "INTERNAL SEARCH"
+            If there is insufficient information, add a disclaimer for "Extra Context Needed", and list the pieces of information which are missing. 
+            """,
         )
 
+        self.summariser = AssistantAgent(
+            name="Summariser",
+            llm_config={"config_list": self.config_list, "cache_seed": None},
+            system_message=f"""Summariser. Your job is to summarise the profiles generated by the writer into a single report.
+            You must preface your output with "PROFILE SUMMARY: {speaker}". 
+            """,
+        )
+      
+        self.ordering = [self.orchestrator,
+                    self.external_searcher,
+                    self.user_proxy,
+                    self.writer,             # Summarise online information
+                    self.supervisor,         # Remind the next member of the team to search for {speaker}
+                    self.internal_searcher,  # Offline search
+                    self.user_proxy,
+                    self.writer,             # Summarise offline information
+                    self.summariser,]        # Summarise both
+        
         def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
             """Define a customized speaker selection function.
             A recommended way is to define a transition for each speaker in the groupchat.
@@ -130,67 +121,36 @@ class ProfileGeneratorAgent:
             Returns:
                 Return an `Agent` class or a string from ['auto', 'manual', 'random', 'round_robin'] to select a default method to use.
             """
-            messages = groupchat.messages
-
-            ordering = [self.supervisor,
-                        self.external_searcher,
-                        self.external_searcher,
-                        self.extractor,
-                        self.supervisor,
-                        self.external_searcher,
-                        self.external_searcher,
-                        self.extractor,
-                        self.supervisor,
-                        self.internal_searcher,
-                        self.internal_searcher,
-                        self.supervisor,
-                        self.writer,
-                        self.supervisor,
-                        self.external_searcher,
-                        self.user_proxy,
-                        self.extractor,
-                        self.supervisor,
-                        self.writer
-                        ]
-            if len(messages) <= len(ordering):
-                return ordering[len(messages)-1]
-
-
-            elif last_speaker is self.planner:
-                # if the last message is from planner, let the crawler search
-                return self.external_searcher
             
-            elif last_speaker is self.user_proxy:
-                if messages[-1]["content"].strip() != "" and messages[-1]["content"].strip()[0] == "#" :
-                    # If the last message is the result of a tool call from user and is not empty, let the writer continue
-                    return self.writer
-                else: 
-                    return self.planner     
+            messages = groupchat.messages
+            poster = MessagePoster()
+            
+            if messages != []:
+                poster.post_internal_message(messages[-1],mode='autogen')
+                if last_speaker is self.writer:
+                    poster.post_message(messages[-1]['content'].replace("**","*"),mode='s')
+            
+            if len(messages) == 4:
+                poster.post_message("PROFILE GENERATED BY EXTERNAL SEARCH:",mode='s')
+            if len(messages) == 8:
+                poster.post_message("PROFILE GENERATED BY INTERNAL SEARCH:",mode='s')
 
-            elif last_speaker is self.external_searcher:
+            if len(messages) <= len(self.ordering):
+                return self.ordering[len(messages)-1]
+            else:
                 return self.user_proxy
 
-            elif last_speaker is self.writer:
-                # Always let the user to speak after the writer
-                return self.internal_searcher
-
-            else:
-                # default to auto speaker selection method
-                return "auto"
-
-
         self.groupchat = GroupChat(
-            agents = [self.user_proxy, self.writer, self.external_searcher, self.planner, self.internal_searcher, 
-                        self.supervisor, self.extractor],
+            agents = [self.user_proxy, self.orchestrator, self.writer, self.external_searcher, self.internal_searcher, self.supervisor, self.summariser],
             messages = [],
-            max_round = 15,
+            max_round = len(self.ordering)+1,
             speaker_selection_method = custom_speaker_selection_func,
         )
         self.manager = GroupChatManager(groupchat = self.groupchat, llm_config = {"config_list": self.config_list, "cache_seed": None})
 
     def start(self):
         try:
-            with Cache.disk(cache_seed=43) as cache:
+            with Cache.disk(cache_seed=54) as cache:
                 groupchat_history_custom = self.user_proxy.initiate_chat(
                     self.manager,
                     message = self.task,
@@ -201,3 +161,6 @@ class ProfileGeneratorAgent:
         except EOFError as e:
             print("EOFError")
             return
+        
+agent = ProfileGeneratorAgent("Dario Amodei")
+agent.start()

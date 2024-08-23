@@ -23,7 +23,7 @@ class ChromaDatabase(ChromaClient):
 
     def internal_search(self, qn, k):
         # print("---- Starting similarity search on Chroma database ----\n")
-        res = self.collection.query(query_texts=[qn], n_results=k)['documents'][0]
+        res = "\n".join(self.collection.query(query_texts=[qn], n_results=k)['documents'][0])
         # print(res)
         print("---- Similarity search finished on Chroma database ----\n")
         return res
@@ -33,6 +33,12 @@ class ChromaDatabase(ChromaClient):
 
 @tool
 def internal_search(internal_search_query: Annotated[str, "Query to search for"], k=3):
+    """Search the local internal database for information pertaining to the query.
+    """
+    chroma_db = ChromaDatabase()
+    return chroma_db.internal_search(internal_search_query, k)
+
+def internal_search_autogen(internal_search_query: Annotated[str, "Query to search for"], k=3):
     """Search the local internal database for information pertaining to the query.
     """
     chroma_db = ChromaDatabase()

@@ -130,30 +130,8 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
 
     if len(messages) <= len(ordering):
         return ordering[len(messages)-1]
-
-
-    elif last_speaker is orchestrator:
-        # if the last message is from planner, let the crawler search
-        return external_searcher
-    
-    elif last_speaker is user_proxy:
-        if messages[-1]["content"].strip() != "" and messages[-1]["content"].strip()[0] == "#" :
-            # If the last message is the result of a tool call from user and is not empty, let the writer continue
-            return writer
-        else: 
-            return orchestrator     
-
-    elif last_speaker is external_searcher:
-        return user_proxy
-
-    elif last_speaker is writer:
-        # Always let the user to speak after the writer
-        return internal_searcher
-
     else:
-        # default to auto speaker selection method
-        return "auto"
-
+        return user_proxy
 
 groupchat = GroupChat(
     agents=[user_proxy, writer, external_searcher, orchestrator, supervisor, internal_searcher, summariser],
