@@ -69,7 +69,7 @@ internal_searcher = AssistantAgent(
     name="Internal Searcher",
     llm_config={"config_list": config_list, "cache_seed": None},
     system_message=f"""Internal Searcher. Do not generate a profile. 
-        Your only jon is to perform a internal search for relevant information about {speaker}. 
+        Your only job is to perform a internal search for relevant information about {speaker}. 
         You are equipped with the internal search tool which searches the internal database for information. 
         You must use the internal search tool to search for {speaker}. 
 """,
