@@ -2,14 +2,15 @@ import re
 import requests
 from typing_extensions import Annotated
 from langchain_core.messages import AnyMessage
+import os
 
 class MessagePoster:
     def __init__(self):
-        self.URL_OUTPUT = 'https://hooks.slack.com/services/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'
-        self.URL_LOG = 'https://hooks.slack.com/services/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'
+        self.URL_OUTPUT = os.environ.get('URL_OUTPUT')
+        self.URL_LOG = os.environ.get('URL_LOG')
 
     def post_message(self, message : AnyMessage, mode='groupchat'):
-
+        """ groupchat mode for v2, autogen mode for v1"""
         if mode == "groupchat":
             content = self._format_message(message.content)
             for p in content.split("\n\n"):
@@ -23,6 +24,12 @@ class MessagePoster:
                     }]
                 }
                 requests.post(self.URL_OUTPUT, json = myobj)
+        elif mode == "autogen":
+            content = message['content']
+            myobj = {
+            "text": str(content)
+            }
+            requests.post(self.URL_OUTPUT, json = myobj)
         else:
             for p in self._format_message(message).split("\n\n"):
                 myobj = {
@@ -46,6 +53,15 @@ class MessagePoster:
             "text": sender + ": \n" + str(content)
             }
             requests.post(self.URL_LOG, json = myobj)
+
+        elif mode=="autogen":
+            sender = message['name'].upper()
+            content = message['content']
+            myobj = {
+            "text": sender + ": \n" + str(content)
+            }
+            requests.post(self.URL_LOG, json = myobj)
+
         else:
             myobj = {
             "text": message

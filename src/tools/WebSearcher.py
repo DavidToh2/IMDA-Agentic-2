@@ -82,5 +82,13 @@ def search_and_crawl(online_search_query: Annotated[str, 'Query to search for'],
     web_searcher.close()
     return res
 
+def search_and_crawl_autogen(external_search_query: Annotated[str, 'Query to search for'], num_pages: Annotated[int, 'Number of search results'] = 2):
+    """Search the web for information on the query.
+    """
+    web_searcher = WebSearcher()
+    res = web_searcher.search_and_crawl(external_search_query, num_pages)
+    web_searcher.close()
+    return res
+
 # c = WebSearcher()
 # print(c.google_search("Dario Amodei"))

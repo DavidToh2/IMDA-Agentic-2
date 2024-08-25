@@ -2,7 +2,7 @@
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
-path = "./internal_info"
+path = "./idsc_demo/internal_info"
 
 files_content = []
 

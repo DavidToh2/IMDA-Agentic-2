@@ -24,9 +24,10 @@ task = "Generate a speaker profile for " + speaker
 
 config_list = [
         {
-            "model": "mistral-16K:latest", 
+            "model": "mistral-8K:latest", 
             "api_key": "ollama", 
             "base_url": "http://localhost:11434/v1", 
+
         }
     ]
 
@@ -39,12 +40,6 @@ user_proxy = UserProxyAgent(
 orchestrator = AssistantAgent(
     name="Orchestrator",
     system_message=f"""Orchestrator. Please determine what information is needed to {task}. """,
-    llm_config={"config_list": config_list, "cache_seed": None},
-)
-
-supervisor = AssistantAgent(
-    name = "Supervisor",
-    system_message=f"""Supervisor. Ignore the group manager. Your only job is to remind the next member of the team to search for {speaker}.""",
     llm_config={"config_list": config_list, "cache_seed": None},
 )
 
@@ -62,16 +57,15 @@ user_proxy.register_for_execution(name="search_and_crawl")(search_and_crawl)
 supervisor = AssistantAgent(
     name="Supervisor",
     llm_config={"config_list": config_list, "cache_seed": None},
-    system_message=f"""Do not generate a profile. Your only job is to remind the next agent to search for {speaker}. """,
+    system_message=f"""Your only job is to remind the next agent to search for {speaker}""",
 )
 
 internal_searcher = AssistantAgent(
     name="Internal Searcher",
     llm_config={"config_list": config_list, "cache_seed": None},
-    system_message=f"""Internal Searcher. Do not generate a profile. 
-        Your only job is to perform a internal search for relevant information about {speaker}. 
-        You are equipped with the internal search tool which searches the internal database for information. 
-        You must use the internal search tool to search for {speaker}. 
+    system_message=f"""Internal Searcher. 
+    Your must perform an internal search for relevant information about {speaker}. 
+
 """,
 )
 internal_searcher.register_for_llm(name="internal_search", description="Searches the internal database for information")(internal_search)
@@ -81,9 +75,8 @@ writer = AssistantAgent(
     name="Writer",
     llm_config={"config_list": config_list, "cache_seed": None},
     system_message="""Writer. Your only job is to write the speaker profile in text based on the information provided by tool calls. 
-    If the information is prefaced by EXTERNAL SEARCH, preface your profile with the headline "EXTERNAL SEARCH". 
-    If the information is prefaced by INTERNAL SEARCH, preface your profile with the headline "INTERNAL SEARCH". 
-    You must generate a complete profile. 
+    If the information is prefaced by EXTERNAL SEARCH, start your profile with the title "EXTERNAL SEARCH"
+    If the information is prefaced by INTERNAL SEARCH, start your profile with the title "INTERNAL SEARCH"
     If there is insufficient information, add a disclaimer for "Extra Context Needed", and list the pieces of information which are missing. 
     """,
 )
@@ -100,6 +93,7 @@ post_internal_message("LOG STARTING FOR profile_generator.py...",mode='direct')
 post_message("STARTING WORKFLOW...",mode='direct')
 post_message("PROMPT: "+task, mode='direct')
 ordering = [orchestrator,
+           
             external_searcher,
             user_proxy,
             writer,             # Summarise online information
@@ -131,8 +125,30 @@ def custom_speaker_selection_func(last_speaker: Agent, groupchat: GroupChat):
 
     if len(messages) <= len(ordering):
         return ordering[len(messages)-1]
-    else:
+
+
+    elif last_speaker is orchestrator:
+        # if the last message is from planner, let the crawler search
+        return external_searcher
+    
+    elif last_speaker is user_proxy:
+        if messages[-1]["content"].strip() != "" and messages[-1]["content"].strip()[0] == "#" :
+            # If the last message is the result of a tool call from user and is not empty, let the writer continue
+            return writer
+        else: 
+            return orchestrator     
+
+    elif last_speaker is external_searcher:
         return user_proxy
+
+    elif last_speaker is writer:
+        # Always let the user to speak after the writer
+        return internal_searcher
+
+    else:
+        # default to auto speaker selection method
+        return "auto"
+
 
 groupchat = GroupChat(
     agents=[user_proxy, writer, external_searcher, orchestrator, supervisor, internal_searcher, summariser],
@@ -144,8 +160,8 @@ manager = GroupChatManager(groupchat=groupchat,
                            llm_config={"config_list": config_list, "cache_seed": None},
                            is_termination_msg=lambda msg: "TERMINATE" in msg["content"])
 
-# Keep 54 with mistral-16K, executed from idsc_demo as the demo
-with Cache.disk(cache_seed=54) as cache:
+# Use cache 49 for demo
+with Cache.disk(cache_seed=55) as cache:
     groupchat_history_custom = user_proxy.initiate_chat(
         manager,
         message=task,
