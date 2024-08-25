@@ -9,7 +9,7 @@ class AgentBase:
         self.TEMP = temp
         self.model = ChatOllama(model = model, temperature = self.TEMP, num_ctx = self.CTX_SIZE)
 
-    def spawn_runnable(self, system_prompt, tools):
+    def spawn_runnable(self, system_prompt, tools = []):
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt),
