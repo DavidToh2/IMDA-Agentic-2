@@ -11,18 +11,12 @@ class LanggraphAgentConfig:
     def __init__(self, prompt, detailed_instructions):
 
         INTERNAL_SEARCHER_PROMPT = f"""You are an agent in charge of searching the internal database using the internal_search tool.
-        When called, you must refer to the previous message, issued by the supervisor agent, for instructions on what to search for.
-        Your search should be relevant to the overall task given by the user.
-        The task is as follows: {prompt} 
-        Once you have understood the supervisor's instructions, perform a tool call using the internal_search tool.
-        Your search will not have been performed until the tool is actually called."""
+        Your job is simply to perform a tool call on the internal_search tool, passing the appropriate search parameters into internal_search_query.
+        Your search parameters should be based on the instructions issued by the supervisor agent in the previous message."""
 
         EXTERNAL_SEARCHER_PROMPT = f"""You are an agent in charge of searching the web using the search_and_crawl tool.
-        When called, you must refer to the previous message, issued by the supervisor agent, for instructions on what to search for.
-        Your search should be relevant to the overall task given by the user.
-        The task is as follows: {prompt} 
-        Once you have understood the supervisor's instructions, perform a tool call using the search_and_crawl tool.
-        Your search will not have been performed until the tool is actually called."""
+        Your job is simply to perform a tool call on the search_and_crawl tool, passing the appropriate search parameters into external_search_query.
+        Your search parameters should be based on the instructions issued by the supervisor agent in the previous message."""
 
         WRITER_PROMPT = f"""You are a writer agent.
         When called, you must refer to the previous message, issued by the supervisor agent, for instructions on exactly what to do.
