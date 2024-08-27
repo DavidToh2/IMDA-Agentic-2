@@ -21,7 +21,7 @@ from tools.MessagePoster import MessagePoster
 class AutogenAgent:
     def __init__(
             self,
-            speaker
+            speaker, detailed_instructions
             ):
         
         self.config_list = [

@@ -8,11 +8,12 @@ from chroma.ChromaDatabase import internal_search
 
 def main():
 
-    prompt = """Generate a speaker profile for Dario Amodei."""
-    detailed_instructions = ""
-    pf = AutogenAgent("Dario Amodei")
-    pf.start()
+    autogen = AutogenAgent("Dario Amodei", "")
+    autogen.start()
 
-    # print(internal_search("Dario Amodei"))
+    # prompt = """Generate a speaker profile for Dario Amodei."""
+    # detailed_instructions = ""
+    # langgraph = LanggraphAgent(prompt, detailed_instructions)
+    # langgraph.start()
     
 main()
