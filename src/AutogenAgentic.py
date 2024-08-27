@@ -18,7 +18,7 @@ from chroma.ChromaDatabase import internal_search_autogen
 from tools.WebSearcher import search_and_crawl_autogen
 from tools.MessagePoster import MessagePoster
 
-class ProfileGeneratorAgent:
+class AutogenAgent:
     def __init__(
             self,
             speaker

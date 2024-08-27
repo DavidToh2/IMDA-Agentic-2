@@ -10,13 +10,17 @@ class LanggraphAgentConfig:
 
     def __init__(self, prompt, detailed_instructions):
 
-        INTERNAL_SEARCHER_PROMPT = f"""You are an agent in charge of searching the internal database using the internal_search tool.
-        Your job is simply to perform a tool call on the internal_search tool, passing the appropriate search parameters into internal_search_query.
-        Your search parameters should be based on the instructions issued by the supervisor agent in the previous message."""
+        INTERNAL_SEARCHER_PROMPT = f"""You are an agent whose only job is to invoke the internal_search tool to search the internal database.
+        Pass in the relevant search parameters into the internal_search_query parameter, based on the instructions in the previous message.
+        You are not to output the actual results of the search - this is the job of another agent.
+        Perform your tool call using correct LangChain syntax. You must preface each tool call with the string '[TOOL_CALLS]'.
+        DO NOT OUTPUT CODE. DO NOT USE ANY CODEBLOCKS (i.e. no use of ``` allowed)."""
 
-        EXTERNAL_SEARCHER_PROMPT = f"""You are an agent in charge of searching the web using the search_and_crawl tool.
-        Your job is simply to perform a tool call on the search_and_crawl tool, passing the appropriate search parameters into external_search_query.
-        Your search parameters should be based on the instructions issued by the supervisor agent in the previous message."""
+        EXTERNAL_SEARCHER_PROMPT = f"""You are an agent whose only job is to invoke the search_and_crawl tool to search the web.
+        Pass in the relevant search parameters into the external_search_query parameter, based on the instructions in the previous message.
+        You are not to output the actual results of the search - this is the job of another agent.
+        Perform your tool call using correct LangChain syntax. You must preface each tool call with the string '[TOOL_CALLS]'.
+        DO NOT OUTPUT CODE. DO NOT USE ANY CODEBLOCKS (i.e. no use of ``` allowed)."""
 
         WRITER_PROMPT = f"""You are a writer agent.
         When called, you must refer to the previous message, issued by the supervisor agent, for instructions on exactly what to do.
@@ -24,22 +28,19 @@ class LanggraphAgentConfig:
 
         self.supervisor_tools = [ToWriterAgent, ToInternalSearchAgent, ToExternalSearchAgent]
         self.agent_tools = [internal_search, search_and_crawl]
-        self.agents = [
-            {
-                "name": "internal_searcher",
+        self.agents = {
+            "internal_searcher": {
                 "prompt": INTERNAL_SEARCHER_PROMPT,
                 "tools": [internal_search]
             },
-            {
-                "name": "external_searcher",
+            "external_searcher": {
                 "prompt": EXTERNAL_SEARCHER_PROMPT,
                 "tools": [search_and_crawl]
             },
-            {
-                "name": "writer",
+            "writer": {
                 "prompt": WRITER_PROMPT
             }
-        ]
+        }
     
     def route_agent(self, state: State, callback: Callable):
         msg = state["messages"][-1]

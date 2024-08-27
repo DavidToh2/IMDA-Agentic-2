@@ -16,7 +16,7 @@ from tools.MessagePoster import MessagePoster
 from chroma.ChromaDatabase import internal_search
 from tools.WebSearcher import search_and_crawl
 
-class ProfileGeneratorAgent:
+class LanggraphSingleAgent:
     def __init__(self, prompt, detailed_instructions):
 
         self.turn = 0

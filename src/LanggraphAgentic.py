@@ -67,38 +67,38 @@ class LanggraphAgent:
         )
         self.graph.add_node("tool_call_filter", Assistant(tool_call_filter_runnable))
 
-                        # TOOL NODE
-
-        self.graph.add_node("tools", self.create_tool_node_with_fallback(self.config.agent_tools))
-
-                        # AGENT NODES AND ENTRY NODES
+                        # AGENT, ENTRY_AGENT AND TOOL_AGENT NODEs
 
         self.agent_runnables = {}
-        for agent in self.config.agents:
-            if hasattr(agent, "tools"):
-                self.agent_runnables[agent["name"]] = self.model.spawn_runnable(agent["prompt"], agent["tools"])
-            else:
-                self.agent_runnables[agent["name"]] = self.model.spawn_runnable(agent["prompt"])
+        for agent, c in self.config.agents.items():
+            if hasattr(c, "tools"):
+                self.graph.add_node(f"enter_{agent}", self.create_entry_node(agent, agent))
+                self.agent_runnables[agent] = self.model.spawn_runnable(c["prompt"], c["tools"])
+                self.graph.add_node(agent, Assistant(self.agent_runnables[agent]))
+                self.graph.add_node(f"tools_{agent}", self.create_tool_node_with_fallback(c["tools"]))
 
-            self.graph.add_node(agent["name"], Assistant(self.agent_runnables[agent["name"]]))
-            self.graph.add_node(f"enter_{agent["name"]}", self.create_entry_node(agent["name"], agent["name"]))
+                self.graph.add_edge(f"enter_{agent}", agent)
+                self.graph.add_conditional_edges(agent, self.tool_router)
+                self.graph.add_edge(f"tools_{agent}", "tool_call_filter")
+            else:
+                self.graph.add_node(f"enter_{agent}", self.create_entry_node(agent, agent))
+                self.agent_runnables[agent] = self.model.spawn_runnable(c["prompt"])
+                self.graph.add_node(agent, Assistant(self.agent_runnables[agent]))
+
+                self.graph.add_edge(f"enter_{agent}", agent)
+                self.graph.add_edge(agent, "exit_agent")
 
                         # EXIT NODE
 
-        self.graph.add_node("exit_tool", self.pop_dialog_state)
+        self.graph.add_node("exit_agent", self.pop_dialog_state)
 
                         # Graph edges:
 
         self.graph.add_edge(START, "supervisor")
         self.graph.add_conditional_edges("supervisor", self.agent_router)
 
-        for agent in self.config.agents:
-            self.graph.add_edge(f"enter_{agent["name"]}", agent["name"])
-            self.graph.add_conditional_edges(agent["name"], self.tool_router)
-
-        self.graph.add_edge("tools", "tool_call_filter")
-        self.graph.add_edge("tool_call_filter", "exit_tool")
-        self.graph.add_edge("exit_tool", "supervisor")
+        self.graph.add_edge("tool_call_filter", "exit_agent")
+        self.graph.add_edge("exit_agent", "supervisor")
 
         self.checkpointer = MemorySaver()
 
@@ -136,8 +136,12 @@ class LanggraphAgent:
         msg = state["messages"][-1]
         tc = msg.tool_calls
         if tc:
-            return "tools"
-        return dialog_state
+            ret = f"tools_{dialog_state}"
+        else:
+            ret = dialog_state
+        
+        print(f"Tool router for node {dialog_state} routed to {ret}")
+        return ret
 
     # Pretty print the model output
     def _print_event(self, event: dict, _printed: set, max_length=15000):
@@ -174,16 +178,16 @@ class LanggraphAgent:
     def create_entry_node(self, assistant_name: str, new_dialog_state: str) -> Callable:
         def entry_node(state: State) -> dict:
             tool_call_id = state["messages"][-1].tool_calls[0]["id"]
-            return {
+            ret = {
                 "messages": [
                     ToolMessage(
-                        content=f"""The assistant is now the {assistant_name}. Reflect on the instructions provided by the supervisor agent.
-                        Use the tool(s) provided to you, if any, to accomplish your task.""",
+                        content=f"""The assistant is now the {assistant_name}.\n{self.config.agents[new_dialog_state]["prompt"]}""",
                         tool_call_id = tool_call_id,
                     )
                 ],
                 "dialog_state": new_dialog_state,
             }
+            return ret
 
         return entry_node
     
