@@ -4,7 +4,7 @@ from langchain_core.runnables import Runnable
 from langchain_ollama import ChatOllama
 
 class AgentBase:
-    def __init__(self, ctx_size, temp, model = "mistral-nemo"):
+    def __init__(self, ctx_size, temp, model = "mistral-16K:latest"):
         self.CTX_SIZE = ctx_size
         self.TEMP = temp
         self.model = ChatOllama(model = model, temperature = self.TEMP, num_ctx = self.CTX_SIZE)

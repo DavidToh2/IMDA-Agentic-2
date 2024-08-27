@@ -16,10 +16,7 @@ class LanggraphAgentConfig:
         Perform your tool call using correct LangChain syntax. You must preface each tool call with the string '[TOOL_CALLS]'.
         DO NOT OUTPUT CODE. DO NOT USE ANY CODEBLOCKS (i.e. no use of ``` allowed)."""
 
-        EXTERNAL_SEARCHER_PROMPT = f"""You are an agent whose only job is to invoke the search_and_crawl tool to search the web.
-        Pass in the relevant search parameters into the external_search_query parameter, based on the instructions in the previous message.
-        You are not to output the actual results of the search - this is the job of another agent.
-        Perform your tool call using correct LangChain syntax. You must preface each tool call with the string '[TOOL_CALLS]'.
+        EXTERNAL_SEARCHER_PROMPT = f"""Invoke the search_and_crawl tool to search the web, following the instructions issued previously.
         DO NOT OUTPUT CODE. DO NOT USE ANY CODEBLOCKS (i.e. no use of ``` allowed)."""
 
         WRITER_PROMPT = f"""You are a writer agent.

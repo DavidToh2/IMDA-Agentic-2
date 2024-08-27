@@ -18,13 +18,6 @@ class State(TypedDict):
     
     # Similarly, annotating dialog_state with the update_dialog_stack function instructs Python to call update_dialog_stack whenever a new dialog_state is returned by some Node.
     dialog_state: Annotated[
-        list[
-            Literal[
-                "supervisor",
-                "internal_searcher",
-                "external_searcher",
-                "writer"
-            ]
-        ],
+        list[str],
         update_dialog_stack,
     ]

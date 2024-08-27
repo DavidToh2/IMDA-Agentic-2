@@ -71,7 +71,7 @@ class LanggraphAgent:
 
         self.agent_runnables = {}
         for agent, c in self.config.agents.items():
-            if hasattr(c, "tools"):
+            if "tools" in c:
                 self.graph.add_node(f"enter_{agent}", self.create_entry_node(agent, agent))
                 self.agent_runnables[agent] = self.model.spawn_runnable(c["prompt"], c["tools"])
                 self.graph.add_node(agent, Assistant(self.agent_runnables[agent]))
@@ -131,7 +131,7 @@ class LanggraphAgent:
 
     def tool_router(self, state: State):
         self.turn += 1
-        dialog_state = state["dialog_state"]
+        dialog_state = state["dialog_state"][-1]
 
         msg = state["messages"][-1]
         tc = msg.tool_calls

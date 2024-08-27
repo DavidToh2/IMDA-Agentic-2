@@ -141,7 +141,7 @@ class LanggraphSingleAgent:
             return "tools"
         
         print("---- It's the agent's turn again ----")
-        if ai_message.content.find("PROFILE") > 0:
+        if ai_message.content.find("Combined Profile") > 0:
             self.message_poster.post_message(ai_message)
         return "agent"
 
