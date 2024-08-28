@@ -40,7 +40,7 @@ class WebSearcher:
         for url in urls:
             print(f"---- Crawling url {url} ----")
             extract = self.read_webpage(url)
-            l = max(len(extract), 4000)
+            l = min(len(extract), 4000)
             extracts.append(extract[:l])
         
         #for url, extract in zip(urls,extracts):

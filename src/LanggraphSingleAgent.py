@@ -21,14 +21,14 @@ class LanggraphSingleAgent:
 
         self.turn = 0
         self.MAX_TURNS = 20
-        self.CTX_SIZE = 16000
+        self.CTX_SIZE = 32000
 
         self.query = f"""You have been tasked with accomplishing the following task:
         {prompt}
         {detailed_instructions}
-        
-        Execute your plan step by step. Incorporate the use of BOTH the internal_search and search_and_crawl tools in your execution.
-        At each step, you must rely on the previous messages to identify which step you are at, before proceeding with the next step.
+        Follow the instructions strictly step by step, executing ONLY one step at a time.
+        Incorporate the use of BOTH the internal_search and search_and_crawl tools in your execution.
+        At each step, state the step number and explain what you are going to do based on the previous messages, before executing that step.
         When you have completed your task, output the string 'DONE' to terminate the interaction."""
 
         self.tools = [search_and_crawl, internal_search]
@@ -126,12 +126,12 @@ class LanggraphSingleAgent:
             self.message_poster.post_message(f"MAX NO. OF TURNS REACHED", mode="debug")
             return END
         
-        # Otherwise, we stop (reply to the user)
-        if ai_message.content.find("DONE") > 0:
-            print("---- Output success ----")
-            self.message_poster.post_message(ai_message)
-            self.message_poster.post_message("OUTPUT SUCCESS", mode="debug")
-            return END
+        # # Otherwise, we stop (reply to the user)
+        # if ai_message.content.find("DONE") > 0:
+        #     print("---- Output success ----")
+        #     self.message_poster.post_message(ai_message)
+        #     self.message_poster.post_message("OUTPUT SUCCESS", mode="debug")
+        #     return END
         
         # Otherwise, check for a tool call
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:

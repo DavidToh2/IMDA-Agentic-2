@@ -11,11 +11,13 @@ def main():
     # autogen = AutogenAgent("Dario Amodei", "")
     # autogen.start()
 
-    prompt = """Generate a profile of Hu Heng Hua."""
+    prompt = """Write a profile of Joe Biden."""
     detailed_instructions = """
-        Step 1. Conduct an online search of externally available data, passing in search arguments in the external_search_query parameter.
-        Step 2. Conduct an internal search of data in our internal database, passing in search arguments in the internal_search_query parameter.
-        Step 3. Using your summary skills, write a combined report using the information from the previous two steps. Preface your report with the words 'COMBINED REPORT'. Output the words 'DONE' to end off your report.
+        Step 1. Conduct an online search of externally available data using the search_and_query tool, passing in search arguments in the external_search_query parameter.
+        Step 2. Disregard all information irrelevant to the main task. Summarise the relevant websearch results into a preliminary report. Preface this report with the words 'EXTERNAL REPORT'.
+        Step 3. Conduct an internal search of data in our internal database using the internal_search tool, passing in search arguments in the internal_search_query parameter.
+        Step 4. Disregard all internal results irrelevant to the main task. Summarise the relevant internal information into a second report. Preface this report with the words 'INTERNAL REPORT'.
+        Step 5. Using your summary skills, write a combined report that includes only the information relevant to the main task. Preface this report with the words 'COMBINED REPORT'. Output the words 'DONE' to end off your report.
     """
     langgraph = LanggraphSingleAgent(prompt, detailed_instructions)
     langgraph.start()

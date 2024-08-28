@@ -5,7 +5,7 @@ from langgraph.graph import START, END, StateGraph, MessagesState
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from langchain_core.runnables import RunnableLambda
-from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage, SystemMessage
 
 from LanggraphAgentConfig import LanggraphAgentConfig
 from agent.AgentBase import AgentBase
@@ -190,6 +190,19 @@ class LanggraphAgent:
             return ret
 
         return entry_node
+    
+    def create_toolcall_syntax_error_node(self, assistant_name: str) -> Callable:
+        def toolcall_syntax_error_node(state: State) -> dict:
+            ret = {
+                "messages": state["messages"][:-1] + [
+                    SystemMessage(
+                        content = f"As {assistant_name}, you were supposed to perform a tool call on one of the tools in {self.config.agents[assistant_name]["tools"]}, but did not do so. Please correct your syntax and try again."
+                    )
+                ],
+            }
+            return ret
+
+        return toolcall_syntax_error_node
     
     def pop_dialog_state(self, state: State) -> dict:
         """Pop the dialog stack and return to the main assistant.
