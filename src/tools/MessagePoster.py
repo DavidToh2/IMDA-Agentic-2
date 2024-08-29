@@ -6,7 +6,7 @@ import os
 
 class MessagePoster:
     def __init__(self):
-        self.URL_OUTPUT = os.environ.get('URL_OUTPUT')
+        self.URL_OUTPUT = os.environ.get('URL_SLM')
         self.URL_LOG = os.environ.get('URL_LOG')
 
     def post_message(self, message : AnyMessage, mode='groupchat'):

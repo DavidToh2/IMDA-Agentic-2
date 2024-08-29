@@ -64,20 +64,15 @@ class LanggraphSingleAgent:
         self.graph.add_node("tools", self.create_tool_node_with_fallback(self.tools))
 
         # Set the entrypoint as `agent`
-        # This means that this node is the first one called
         self.graph.add_edge(START, "agent")
 
         # We now add a conditional edge
         self.graph.add_conditional_edges(
-            # First, we define the start node. We use `agent`.
-            # This means these are the edges taken after the `agent` node is called.
             "agent",
-            # Next, we pass in the function that will determine which node is called next.
             self.should_continue,
         )
 
         # We now add a normal edge from `tools` to `agent`.
-        # This means that after `tools` is called, `agent` node is called next.
         self.graph.add_edge("tools", 'agent')
 
         # Initialize memory to persist state between graph runs
@@ -86,10 +81,7 @@ class LanggraphSingleAgent:
         self.message_poster = MessagePoster()
 
     def start(self):
-        # Finally, we compile it!
-        # This compiles it into a LangChain Runnable,
-        # meaning you can use it as you would any other runnable.
-        # Note that we're (optionally) passing the memory when compiling the graph
+        """Start the LLM. This compiles it into a Runnable then streams its output."""
         app = self.graph.compile(checkpointer = self.checkpointer)
 
         # Use the Runnable
@@ -104,8 +96,10 @@ class LanggraphSingleAgent:
 
         return _events
 
-    # Define the function that determines whether to continue or not
     def should_continue(self, state: MessagesState):
+        """Function for conditional edge from 'agent' determining which node to go to next.
+        
+        Returns either 'agent', 'tools' or END."""
 
         # Terminate if 10 messages have already passed
         self.turn += 1
@@ -132,24 +126,26 @@ class LanggraphSingleAgent:
         #     self.message_poster.post_message(ai_message)
         #     self.message_poster.post_message("OUTPUT SUCCESS", mode="debug")
         #     return END
+
+        if ai_message.content.find("REPORT") > 0:
+            self.message_poster.post_message(ai_message)
+
+        if ai_message.content.find("COMBINED REPORT") > 0:
+            return END
         
         # Otherwise, check for a tool call
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
             print("---- Tool call detected ----")
             tc = [t["name"] for t in ai_message.tool_calls]
-            self.message_poster.post_message(f"Calling the following tools: {" ".join(tc)}", mode="debug")
+            # self.message_poster.post_message(f"Calling the following tools: {" ".join(tc)}", mode="debug")
             return "tools"
         
         print("---- It's the agent's turn again ----")
-        if ai_message.content.find("Combined Profile") > 0:
-            self.message_poster.post_message(ai_message)
         return "agent"
 
     # Pretty print the model output
     def _print_event(self, event: dict, _printed: set, max_length=15000):
-        # print(f"---- CURRENT EVENT: ----")
-        # print(event)
-        # print('\n')
+        
         current_state = event.get("dialog_state")
         if current_state:
             print("Currently in: ", current_state[-1])

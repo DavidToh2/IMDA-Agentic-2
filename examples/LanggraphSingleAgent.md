@@ -13,6 +13,8 @@ Detailed instructions:
 - Step 4. Summarise the internal information into a preliminary report. Preface this report with the words 'INTERNAL REPORT'.
 - Step 5. Using your summary skills, write a combined report using the summaries above. Preface this report with the words 'COMBINED REPORT'. Output the words 'DONE' to end off your report.
 
+Context size: 16000; Webpage character limit: none
+
 **Output:** (Note that the model outputted all three reports in one single step, as its final output.)
 ```
 **EXTERNAL REPORT**
@@ -43,6 +45,8 @@ Detailed instructions:
 - Step 3. Conduct an internal search of data in our internal database using the internal_search tool, passing in search arguments in the internal_search_query parameter.
 - Step 4. Disregard all internal results irrelevant to the main task. Summarise the relevant internal information into a second report. Preface this report with the words 'INTERNAL REPORT'.
 - Step 5. Using your summary skills, write a combined report that includes only the information relevant to the main task. Preface this report with the words 'COMBINED REPORT'. Output the words 'DONE' to end off your report.
+
+Context size: 32000; Webpage character limit: 4000
 
 **Output:**
 

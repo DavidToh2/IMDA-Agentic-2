@@ -10,10 +10,7 @@ class LanggraphAgentConfig:
 
     def __init__(self, prompt, detailed_instructions):
 
-        INTERNAL_SEARCHER_PROMPT = f"""You are an agent whose only job is to invoke the internal_search tool to search the internal database.
-        Pass in the relevant search parameters into the internal_search_query parameter, based on the instructions in the previous message.
-        You are not to output the actual results of the search - this is the job of another agent.
-        Perform your tool call using correct LangChain syntax. You must preface each tool call with the string '[TOOL_CALLS]'.
+        INTERNAL_SEARCHER_PROMPT = f"""Invoke the internal_search tool to search our internal database, following the instructions issued previously.
         DO NOT OUTPUT CODE. DO NOT USE ANY CODEBLOCKS (i.e. no use of ``` allowed)."""
 
         EXTERNAL_SEARCHER_PROMPT = f"""Invoke the search_and_crawl tool to search the web, following the instructions issued previously.

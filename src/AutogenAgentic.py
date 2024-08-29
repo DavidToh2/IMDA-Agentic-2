@@ -150,7 +150,7 @@ class AutogenAgent:
 
     def start(self):
         try:
-            with Cache.disk(cache_seed=56) as cache:
+            with Cache.disk(cache_seed=103) as cache:
                 groupchat_history_custom = self.user_proxy.initiate_chat(
                     self.manager,
                     message = self.task,
