@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from typing_extensions import Annotated
 
 import pickle
-driver = webdriver.Firefox()
+
 # Helper functions
 def not_blacklisted(blacklist):
     def link_not_blacklisted(link):
@@ -38,7 +38,7 @@ def read_webpage(url):
 
 def search_and_crawl(
     query: Annotated[str, 'query to search for'],
-    n=1,
+    n=2,
     blacklist=['google','youtu'], 
     ):
     driver = webdriver.Firefox()
@@ -53,5 +53,3 @@ def search_and_crawl(
         #print(f"Extracted from ${url}:")
         #print(extract + "\n")
     return "EXTERNAL SEARCH RESULTS: " + "\n".join(extracts) 
-
-read_webpage("https://en.wikipedia.org/wiki/IMac_G3")
