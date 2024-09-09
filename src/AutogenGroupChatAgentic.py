@@ -1,16 +1,9 @@
-import os
-from datetime import datetime
-from ssl import ALERT_DESCRIPTION_BAD_CERTIFICATE_HASH_VALUE
-
 from autogen import (
     Agent,
     AssistantAgent,
-    ConversableAgent,
     GroupChat,
     GroupChatManager,
     UserProxyAgent,
-    config_list_from_json,
-    register_function,
 )
 
 from autogen.cache import Cache
@@ -18,17 +11,15 @@ from chroma.ChromaDatabase import internal_search_autogen
 from tools.WebSearcher import search_and_crawl_autogen
 from tools.MessagePoster import MessagePoster
 
-class AutogenAgent:
-    def __init__(
-            self,
-            speaker, detailed_instructions
-            ):
-        
+class AutogenGroupChatAgent:
+    def __init__(self,speaker):
+
+        # LLM served through ollama on localhost
         self.config_list = [
             {
-                "model": "mistral-16K:latest", 
-                "api_key": "ollama", 
-                "base_url": "http://localhost:11434/v1", 
+                "model": "mistral-32K:latest", # Picked from models available within ollama; run `ollama ls` on terminal to list all models
+                "api_key": "ollama", # Arbitrary key
+                "base_url": "http://localhost:11434/v1", # OpenAI-compatible API endpoint, implemented by ollama
                 #"temperature":0.0
                 "price" : [0.0, 0.0]
             }
@@ -79,7 +70,7 @@ class AutogenAgent:
             system_message=f"""Internal Searcher. Do not generate a profile. 
                 Your only job is to perform a internal search for relevant information about {speaker}. 
                 You are equipped with the internal search tool which searches the internal database for information. 
-                You are to respond with a tool call using the internal search tool to search for {speaker}. 
+                You must use the internal search tool to search for {speaker}. 
         """,
         )
         
@@ -161,6 +152,3 @@ class AutogenAgent:
         except EOFError as e:
             print("EOFError")
             return
-        
-# agent = ProfileGeneratorAgent("Dario Amodei")
-# agent.start()

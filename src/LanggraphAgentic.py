@@ -103,6 +103,8 @@ class LanggraphAgent:
         self.checkpointer = MemorySaver()
 
         self.message_poster = MessagePoster()
+        
+        
 
     def start(self):
         # Finally, we compile it!
@@ -110,7 +112,7 @@ class LanggraphAgent:
         # meaning you can use it as you would any other runnable.
         # Note that we're (optionally) passing the memory when compiling the graph
         app = self.graph.compile(checkpointer = self.checkpointer)
-
+        #app.get_graph().draw_mermaid_png(output_file_path="./langgraph_agent_graph")
         # Use the Runnable
         _events = app.stream(
             {"messages": [ HumanMessage(content = self.query)] },

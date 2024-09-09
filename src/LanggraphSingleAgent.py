@@ -1,5 +1,3 @@
-from typing import Annotated, Literal, TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, END, StateGraph, MessagesState
@@ -83,7 +81,7 @@ class LanggraphSingleAgent:
     def start(self):
         """Start the LLM. This compiles it into a Runnable then streams its output."""
         app = self.graph.compile(checkpointer = self.checkpointer)
-
+        app.get_graph().draw_mermaid_png(output_file_path="./langgraph_single_agent_graph")
         # Use the Runnable
         _events = app.stream(
             {"messages": [ HumanMessage(content = self.query)] },

@@ -1,9 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 from typing_extensions import Annotated
 
 # Helper functions
@@ -55,8 +51,5 @@ def search_and_crawl(
     for url in urls:
         extract = read_webpage(url, driver)
         extracts.append(extract)
-    
-    #for url, extract in zip(urls,extracts):
-        #print(f"Extracted from ${url}:")
-        #print(extract + "\n")
+
     return "EXTERNAL SEARCH RESULTS: \n" + "\n".join(extracts)    

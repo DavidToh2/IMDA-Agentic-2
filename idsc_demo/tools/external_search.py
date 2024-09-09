@@ -29,7 +29,7 @@ def google_search(
     
     return links[0:n]
 
-def read_webpage(url):
+def read_webpage(url, driver):
     driver.get(url)
     driver.implicitly_wait(10)
     driver.get_full_page_screenshot_as_file("test.png")

@@ -1,4 +1,3 @@
-# Run file in idsc_demo folder
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os

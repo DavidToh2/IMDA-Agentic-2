@@ -1,13 +1,12 @@
 
-from AutogenAgentic import AutogenAgent
-
+from AutogenSeqChatAgentic import AutogenSeqChatAgent
 
 from chroma.ChromaDatabase import internal_search
 
 def main():
-
-    # autogen = AutogenAgent("Mira Murati", "")
-    # autogen.start()
+    # Cache 103 AutogenGroupChat for demo
+    autogen = AutogenSeqChatAgent("Mira Murati")
+    autogen.start()
 
     prompt = """Write a profile of Mira Murati."""
     detailed_instructions = """
@@ -20,7 +19,6 @@ def main():
         Ensure you use the correct tool calling syntax. If your tool call returns with no output, it means you have failed to use the correct syntax: fix your syntax and try again.
         All your reports should be in paragraph form, and not in point form.
     """
-    langgraph = LanggraphSingleAgent(prompt, detailed_instructions)
-    langgraph.start()
+
     
 main()
