@@ -10,6 +10,8 @@ Our problem statement was to create a mutli-agent, retrieval-augmented AI system
 
 A stretch goal was to identify and generate all profiles of all speakers at any event.
 
+Refer to https://pine-friction-47e.notion.site/52d829b041e74cdba9351397a9690cb4?v=0b8a5eebf9db41088419d8ca53694637 for documentation. 
+
 ## Project Structure
 
 - `idsc_demo` contains experimental versions and trials that were prototyped during the exploratory phase of the project. The most complete version is `profile_generator.py`. Note that everything in this folder is self-contained.
