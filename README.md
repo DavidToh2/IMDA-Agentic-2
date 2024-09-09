@@ -56,12 +56,18 @@ Then `pip freeze > requirements.txt`.
 
 # Further Development
 
-We have built three different agentic models which can be found in `src`:
+We have built four different agentic models which can be found in `src`:
 
-- `AutogenAgentic.py`: uses Autogen to implement a system of agents (`orchestrator, supervisor, external_searcher, internal_searcher, writer, summariser`). 
+- `AutogenGroupChatAgentic.py`: uses Autogen to implement a system of agents (`orchestrator, supervisor, external_searcher, internal_searcher, writer, summariser`). 
     - The agents carry out the task in a predetermined sequence: future work can be done on this by removing `self.ordering` and further building up `custom_speaker_select_func()`.
     - As mentioned before, this model is cache-able: by modifying the seed value in the code, runs can be cached or replayed from the cache.
     - This model is not deterministic for some reason even though the temperature is 0.0, hence caching is necessary.
+- `AutogenSeqChatAgentic.py`: uses the Sequential Chat architecture on Autogen to segregate external and internal search workflows.
+    - External and internal search workflows are implemented on separate groupchats
+    - Flow is as follows:
+      ```
+      ORCHESTRATOR --> (PLANNER --> EXTERNAL SEARCHER --> USER PROXY --> WRITER) --> (INTERNAL SEARCHER --> USER PROXY --> WRITER)
+      ```
 - `LanggraphSingleAgent.py`: uses Langgraph to implement a single-agent workflow, structured as a simple cyclic graph: 
 ```
 START --> AGENT <-> TOOL_CALL
