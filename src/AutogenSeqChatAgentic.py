@@ -1,6 +1,7 @@
 from autogen import GroupChatManager, ConversableAgent, GroupChat, AssistantAgent, UserProxyAgent
 from tools.WebSearcher import search_and_crawl_autogen
 from chroma.ChromaDatabase import internal_search_autogen
+from autogen.cache import Cache
 
 class AutogenSeqChatAgent: 
     def __init__(self,speaker):
@@ -17,8 +18,6 @@ class AutogenSeqChatAgent:
         self.orchestrator = ConversableAgent(
             name='Orchestrator',                         
             llm_config=False,
-            human_input_mode="ALWAYS",
-
             )
         self.planner = AssistantAgent(
                     name="Planner",
@@ -85,11 +84,12 @@ class AutogenSeqChatAgent:
         )
     
     def start(self):
-        reply = self.orchestrator.initiate_chats(
-            [
-                {"recipient": self.external_groupchat_manager,"message": f"Generate a speaker profile for {self.speaker}", "summary_method": "last_msg"},
-                {"recipient": self.internal_groupchat_manager,"message": "", "summary_method": "last_msg"}
-            ]
-        )
+        with Cache.disk(cache_seed=10) as cache:
+            reply = self.orchestrator.initiate_chats(
+                [
+                    {"recipient": self.external_groupchat_manager,"message": f"Generate a speaker profile for {self.speaker}", "summary_method": "last_msg"},
+                    {"recipient": self.internal_groupchat_manager,"message": "", "summary_method": "last_msg"}
+                ]
+            )
 
         return reply

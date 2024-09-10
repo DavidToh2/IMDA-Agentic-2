@@ -56,7 +56,7 @@ unstructured (required by chroma)
 ```
 Then `pip freeze > requirements.txt`.
 
-# Further Development
+# Agentic Models
 
 We have built four different agentic models which can be found in `src`:
 
@@ -81,4 +81,11 @@ START --> AGENT <-> TOOL_CALL
 START --> SUPERVISOR --> ENTER_CUSTOM_AGENT --> CUSTOM_AGENT --> CUSTOM_AGENT_TOOL --> TOOL_CALL_FILTER --> EXIT_AGENT --> SUPERVISOR
 ```
 
-Every class accepts `prompt` and `detailed_instructions` arguments. To invoke, simply instantiate the class in `main.py` and then call the `start()` method. In this manner you may switch between the three models depending on their performance.
+To invoke, simply instantiate the class in `main.py` and then call the `start()` method. In this manner you may switch between the four models depending on their performance.
+
+# Cached runs
+Examples of successful runs have been cached for reference.
+Note that caching is only supported for autogen-based implementations.  
+- 10: AutogenSeqChatAgentic profile for 'Mira Murati'
+- 103: AutogenGroupChatAgentic profile for 'Mira Murati'
+To prevent accidental overwrites of these cached runs, DO NOT use any of the numbers above as cache seeds. 
