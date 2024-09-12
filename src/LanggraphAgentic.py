@@ -32,8 +32,7 @@ class LanggraphAgent:
 
         self.config = LanggraphAgentConfig(prompt, detailed_instructions)
 
-                        # SUPERVISOR AGENT
-
+        # SUPERVISOR AGENT
         SUPERVISOR_PROMPT = f"""You are a supervisor in charge of a team of agents.
         You were assigned the following task by the user: {prompt}
         Follow the detailed instructions step by step.
@@ -52,8 +51,7 @@ class LanggraphAgent:
         )
         self.graph.add_node("supervisor", Assistant(supervisor_runnable))
 
-                        # TOOL CALL FILTER AGENT
-
+        # TOOL CALL FILTER AGENT
         TOOL_CALL_FILTER_PROMPT = f"""You are a filter agent, in charge of summarising the results of the previous tool call.
         Your job is to summarise those parts of the previous ToolMessage that are relevant to the overall task given by the user.
         The task is as follows: {prompt} 
@@ -67,8 +65,7 @@ class LanggraphAgent:
         )
         self.graph.add_node("tool_call_filter", Assistant(tool_call_filter_runnable))
 
-                        # AGENT, ENTRY_AGENT AND TOOL_AGENT NODEs
-
+        # AGENT, ENTRY_AGENT AND TOOL_AGENT NODEs
         self.agent_runnables = {}
         for agent, c in self.config.agents.items():
             if "tools" in c:
@@ -88,12 +85,10 @@ class LanggraphAgent:
                 self.graph.add_edge(f"enter_{agent}", agent)
                 self.graph.add_edge(agent, "exit_agent")
 
-                        # EXIT NODE
-
+        # EXIT NODE
         self.graph.add_node("exit_agent", self.pop_dialog_state)
 
-                        # Graph edges:
-
+        # Graph edges:
         self.graph.add_edge(START, "supervisor")
         self.graph.add_conditional_edges("supervisor", self.agent_router)
 
@@ -103,8 +98,6 @@ class LanggraphAgent:
         self.checkpointer = MemorySaver()
 
         self.message_poster = MessagePoster()
-        
-        
 
     def start(self):
         # Finally, we compile it!
@@ -112,7 +105,7 @@ class LanggraphAgent:
         # meaning you can use it as you would any other runnable.
         # Note that we're (optionally) passing the memory when compiling the graph
         app = self.graph.compile(checkpointer = self.checkpointer)
-        #app.get_graph().draw_mermaid_png(output_file_path="./langgraph_agent_graph")
+
         # Use the Runnable
         _events = app.stream(
             {"messages": [ HumanMessage(content = self.query)] },

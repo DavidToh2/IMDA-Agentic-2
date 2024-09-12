@@ -1,11 +1,11 @@
 
-from AutogenSeqChatAgentic import AutogenSeqChatAgent
+from AutogenGroupChatAgentic import AutogenGroupChatAgent
 
 from chroma.ChromaDatabase import internal_search
 
 def main():
     # Cache 103 AutogenGroupChat for demo
-    autogen = AutogenSeqChatAgent("Mira Murati")
+    autogen = AutogenGroupChatAgent("Mira Murati")
     autogen.start()
 
     prompt = """Write a profile of Mira Murati."""

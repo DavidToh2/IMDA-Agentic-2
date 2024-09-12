@@ -12,6 +12,8 @@ A stretch goal was to identify and generate all profiles of all speakers at any 
 
 Refer to https://pine-friction-47e.notion.site/52d829b041e74cdba9351397a9690cb4?v=0b8a5eebf9db41088419d8ca53694637 for documentation. 
 
+Refer to https://github.com/BurningSheep02/IMDA-Agentic for prior exploration of agentic framworks. 
+
 ## Project Structure
 
 - `idsc_demo` contains experimental versions and trials that were prototyped during the exploratory phase of the project. The most complete version is `profile_generator.py`. Note that everything in this folder is self-contained.
