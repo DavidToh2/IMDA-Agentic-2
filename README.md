@@ -98,17 +98,17 @@ To prevent accidental overwrites of these cached runs, DO NOT use any of the num
 
 https://github.com/DavidToh2/IMDA-Agentic-2
 
-1. Install dependencies as required. 
-2. Set up Ollama following: 
+2. Install dependencies as required. 
+3. Set up Ollama following: 
     
     [Local LLM Setup: Ollama](https://www.notion.so/Local-LLM-Setup-Ollama-09b0eac9a41e4908b77333b5c4f5c9d5?pvs=21)
     
     For profile generator to work, download mistral-nemo and set the context size to 32000 (near the limit for Macbook Pro with 16GB RAM). 
     
-3. Set the following environmental variables if Slack integration is desired (Input dummy values otherwise)
+4. Set the following environmental variables if Slack integration is desired (Input dummy values otherwise)
     1. URL_OUTPUT
     2. URL_LOG
-4. To run the profile generator, go to the main.py file in the src folder. 
+5. To run the profile generator, go to the main.py file in the src folder. 
     1. To run the Sequential Chat, replace the contents of the files with the following: 
         
         ```python
@@ -183,7 +183,7 @@ https://github.com/DavidToh2/IMDA-Agentic-2
         main()
         ```
         
-5. Run the main.py file from IMDA-Agentic-2 via the command line.  
+6. Run the main.py file from IMDA-Agentic-2 via the command line.  
 
 ```python
 python3 src/main.py
