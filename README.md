@@ -51,7 +51,7 @@ Install the following dependencies manually:
 ```python
 sentence_transformers
 chromadb
-pyautogen
+ag2
 langchain langchain-core langchain-community langchain_chroma langgraph
 selenium
 unstructured (required by chroma)
